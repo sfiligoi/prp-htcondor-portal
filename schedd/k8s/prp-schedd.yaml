@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prp-schedd
+  namespace: htcondor-portal
+  labels:
+    k8s-app: prp-schedd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: prp-schedd
+  template:
+    metadata: 
+      labels:
+        k8s-app: prp-schedd
+    spec:
+      nodeSelector:
+        nautilus.io/latency: ucsd-b
+      containers:
+      - name: htcondor
+        image: htcondor/submit:9.0-el7
+        imagePullPolicy: Always
+        #command: ["sh", "-c", "sleep infinity"]
+        env:
+        - name: CONDOR_HOST
+          value: "10.105.94.151"
+        resources:
+           limits:
+             memory: 16Gi
+             cpu: 4
+           requests:
+             memory: 2Gi
+             cpu: 0.1
+        ports:
+        - containerPort: 9618
+        volumeMounts:
+        - name: condordata
+          mountPath: /var/lib/condor
+        - name: condorlogs
+          mountPath: /var/log/condor
+      volumes:
+      - name: condordata
+        persistentVolumeClaim:
+          claimName: prp-schedd-pvc-state
+      - name: condorlogs
+        persistentVolumeClaim:
+          claimName: prp-schedd-pvc-logs
+

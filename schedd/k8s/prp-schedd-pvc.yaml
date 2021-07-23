@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prp-schedd-pvc-state
+  namespace: htcondor-portal
+spec:
+  storageClassName: rook-cephfs
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prp-schedd-pvc-logs
+  namespace: htcondor-portal
+spec:
+  storageClassName: rook-cephfs
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20G
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prp-schedd-pvc-home
+  namespace: htcondor-portal
+spec:
+  storageClassName: rook-cephfs
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 200G
