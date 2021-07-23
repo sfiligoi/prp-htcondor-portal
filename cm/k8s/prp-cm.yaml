@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prp-cm
+  namespace: htcondor-portal
+  labels:
+    k8s-app: prp-cm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: prp-cm
+  template:
+    metadata: 
+      labels:
+        k8s-app: prp-cm
+    spec:
+      nodeSelector:
+        nautilus.io/latency: ucsd-b
+      containers:
+      - name: htcondor
+        image: htcondor/cm:9.0-el7
+        imagePullPolicy: Always
+        #command: ["sh", "-c", "sleep infinity"]
+        resources:
+           limits:
+             memory: 4Gi
+             cpu: 1
+           requests:
+             memory: 0.5Gi
+             cpu: 0.1
+        ports:
+        - containerPort: 9618
+        volumeMounts:
+        - name: condordata
+          mountPath: /var/lib/condor
+        - name: condorlogs
+          mountPath: /var/log/condor
+      volumes:
+      - name: condordata
+        persistentVolumeClaim:
+          claimName: prp-cm-pvc-state
+      - name: condorlogs
+        persistentVolumeClaim:
+          claimName: prp-cm-pvc-logs
