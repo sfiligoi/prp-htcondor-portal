@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: prp-schedd
   namespace: htcondor-portal
@@ -7,6 +7,7 @@ metadata:
     k8s-app: prp-schedd
 spec:
   replicas: 1
+  serviceName: "prp-schedd"
   selector:
     matchLabels:
       k8s-app: prp-schedd
@@ -24,7 +25,7 @@ spec:
         #command: ["sh", "-c", "sleep infinity"]
         env:
         - name: CONDOR_HOST
-          value: "10.105.94.151"
+          value: "prp-cm-htcondor.htcondor-portal.svc.cluster.local"
         resources:
            limits:
              memory: 16Gi
