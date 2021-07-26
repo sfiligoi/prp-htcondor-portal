@@ -40,6 +40,10 @@ spec:
           mountPath: /var/lib/condor
         - name: condorlogs
           mountPath: /var/log/condor
+        - name: configpasswd
+          mountPath: /etc/condor/tokens-orig.d/prp-schedd.token
+          subPath: prp-schedd.token
+          readOnly: true
       volumes:
       - name: condordata
         persistentVolumeClaim:
@@ -47,4 +51,11 @@ spec:
       - name: condorlogs
         persistentVolumeClaim:
           claimName: prp-schedd-pvc-logs
+      - name: configpasswd
+        secret:
+          secretName: prp-schedd-secret
+          items:
+             - key: prp-schedd.token
+               path: prp-schedd.token
+          defaultMode: 256
 

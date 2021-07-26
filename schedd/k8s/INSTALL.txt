@@ -1,0 +1,9 @@
+To create the prp-schedd.token:
+==============================
+Log into prp-cm-0.
+Execute
+condor_token_create -identity prp-schedd-0@htcondor-portal.svc.cluster.local \
+                    -authz READ \
+                    -authz ADVERTISE_MASTER \
+                    -authz ADVERTISE_SCHEDD
+Save output in prp-schedd.token file.
