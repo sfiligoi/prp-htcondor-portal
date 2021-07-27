@@ -29,6 +29,13 @@ add_values_to 01-env.conf \
     RESERVED_DISK "${RESERVED_DISK:-1024}" \
     USE_POOL_PASSWORD "${USE_POOL_PASSWORD:-no}"
 
+if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
+  echo "# This file was created by $prog" > /etc/condor/config.d/01-noclaim-shutdown.conf
+  add_values_to 01-noclaim-shutdown.conf \
+      STARTD_NOCLAIM_SHUTDOWN "${STARTD_NOCLAIM_SHUTDOWN}" \
+fi
+
+
 
 # Bug workaround: daemons will die if they can't raise the number of FD's;
 # cap the request if we can't raise it.

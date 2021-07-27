@@ -34,7 +34,7 @@ RUN chmod a+rx /usr/sbin/container_startup.sh
 
 #
 # Accepts env variables
-# CONDOR_HOST NUM_CPUS MEMORY RESERVED_DISK
+# CONDOR_HOST NUM_CPUS MEMORY RESERVED_DISK STARTD_NOCLAIM_SHUTDOWN
 #
 
 CMD ["/usr/sbin/container_startup.sh"]
