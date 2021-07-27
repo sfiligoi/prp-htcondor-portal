@@ -32,7 +32,7 @@ add_values_to 01-env.conf \
 if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
   echo "# This file was created by $prog" > /etc/condor/config.d/01-noclaim-shutdown.conf
   add_values_to 01-noclaim-shutdown.conf \
-      STARTD_NOCLAIM_SHUTDOWN "${STARTD_NOCLAIM_SHUTDOWN}" \
+      STARTD_NOCLAIM_SHUTDOWN "${STARTD_NOCLAIM_SHUTDOWN}"
 fi
 
 
