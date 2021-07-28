@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.3.1-base-centos7
+FROM nvidia/cuda:11.2.1-base-centos7
 
 # OSG RPMs
 RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-latest.rpm && \
