@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prp-htcondor-provisioner
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-provisioner-pods
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-provisioner-pods
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-provisioner
+roleRef:
+  kind: Role
+  name: prp-htcondor-provisioner-pods # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-provisioner-batch
+rules:
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-provisioner-batch
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-provisioner
+roleRef:
+  kind: Role
+  name: prp-htcondor-provisioner-batch # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-provisioner-deployment
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-provisioner-deployment
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-provisioner
+roleRef:
+  kind: Role
+  name: prp-htcondor-provisioner-deployment # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-provisioner-secrets
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-provisioner-secrets
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-provisioner
+roleRef:
+  kind: Role
+  name: prp-htcondor-provisioner-secrets # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-provisioner-configmaps
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-provisioner-configmaps
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-provisioner
+roleRef:
+  kind: Role
+  name: prp-htcondor-provisioner-configmaps # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+
