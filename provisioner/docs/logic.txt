@@ -1,0 +1,57 @@
+The PRP's HTCondor provisioner
+==============================
+
+Infrastructure considerations
+-----------------------------
+
+The desired semantics of the provisioner is to operate a a k8s controller:
+https://kubernetes.io/docs/concepts/architecture/controller/
+
+But does not have to implemented as a custom resource.
+Indeed, the initial plan is to run it as a regular pod (managed by a deployment),
+so it can be launched without nay special privileges.
+
+High level goal
+---------------
+
+The main task of the provisioner is to find resources for jobs that are waiting
+in the monitored HTCondor schedd queues.
+Since some jobs may be short lived and resources may not be immediately avaialble, 
+the provisioner should not just submit one worker pod per job, but should be 
+somewhat smarter.
+That will allow for some worker pods to run multiple jobs,
+and thus lower the burden on the k8s system.
+
+The provisioner is a namespace-bound process, so it only serves users belonging
+to its own namespace. It is assumed that the schedd will aociate a valid
+namespace to each job (in a secure and trustworthy manner).
+
+Users can specify what kind of resources they need;
+the provisioner will provision each kind separately
+and only match jobs with the right characteristics 
+to those worke pods.
+
+Provisioning logic
+------------------
+As any controller, the provisioner will operate as an infinite loop.
+A fixed cadence will be implemented in the initial stage, but may become more dynamic in the future.
+
+At each iteration:
+a) Query HTCondor schedd(s) for number for idle and running jubs
+b) Query k8s for number of running, starting, pending and "other" pods
+c) Submit additional pods, if more are needed
+d) Clean up completed and invalid pods (recording any avaialble stats, if appropriate)
+
+The formula for setting the desired number of non-running pods will likely evolve in time.
+The initial implementation will be as follows:
+if (#idle_jobs < Nmin) then #idle_jobs
+else max(Nmin,#idle_jobs/4)
+
+The constant Nmin could be changed, but will initially be fixed at 5.
+
+We will also monior the number of unmatched wn pods (i.e. startds);
+we will subtract that number from the abs number of idle jobs in the schedd queues.
+
+We will also want to monitor the number of failed pods, and back-off in case of too many failures.
+TBD, but will likely not be present in the first iteration.
+
