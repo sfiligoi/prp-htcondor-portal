@@ -44,6 +44,12 @@ spec:
           mountPath: /etc/condor/tokens-orig.d/prp-schedd.token
           subPath: prp-schedd.token
           readOnly: true
+        - name: config1sec
+          mountPath: /etc/condor/config.d/01-security.conf
+          subPath: 01-security.conf
+        - name: config10sec
+          mountPath: /etc/condor/config.d/10-security-multiuser-client.conf
+          subPath: 10-security-multiuser-client.conf
       volumes:
       - name: condordata
         persistentVolumeClaim:
@@ -58,4 +64,16 @@ spec:
              - key: prp-schedd.token
                path: prp-schedd.token
           defaultMode: 256
+      - name: config1sec
+        configMap:
+          name: prp-schedd-config
+          items:
+             - key: 01-security.conf
+               path: 01-security.conf
+      - name: config10sec
+        configMap:
+          name: prp-schedd-config
+          items:
+             - key: 10-security-multiuser-client.conf
+               path: 10-security-multiuser-client.conf
 
