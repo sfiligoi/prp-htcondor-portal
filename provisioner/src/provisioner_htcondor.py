@@ -9,8 +9,11 @@
 import copy
 import re
 import htcondor
+import classad
 
 class ProvisionerSchedd:
+   """HTCondor schedd interface"""
+
    def __init__(self, namespace, trusted_schedds):
       """
       Arguments:
@@ -22,7 +25,7 @@ class ProvisionerSchedd:
       self.namespace = copy.deepcopy(namespace)
       self.trusted_schedds = copy.deepcopy(trusted_schedds)
 
-   def query_idle(self):
+   def query_idle(self, projection=[]):
       """Return the list of idle jobs for my namespace"""
 
       jobs=[]
@@ -30,7 +33,7 @@ class ProvisionerSchedd:
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         jobs+=s.xquery(constraint='(JobStatus=?=1)&&(prp_namespace=?="%s")'%self.namespace)
+         jobs+=s.xquery(constraint='(JobStatus=?=1)&&(prp_namespace=?="%s")'%self.namespace, projection=projection)
 
       return jobs
 
@@ -67,4 +70,51 @@ class ProvisionerSchedd:
                break # found, we are done
          # ignore all others
       return found
+
+
+
+class ProvisionerClusteredSchedd:
+   """HTCondor schedd interface with clustering"""
+
+   def __init__(self, namespace, trusted_schedds):
+      """
+      Arguments:
+         namespace: string
+             Monitored namespace
+         trusted_schedds: dictionary, NameRegexp:AuthenticatedIdentityRegexp
+             Set of schedds to query. Both name and AuthenticatedIdentity are regexp.
+      """
+      self.schedd=ProvisionerSchedd(namespace, trusted_schedds)
+
+      # fix list of attributes and their defaults here
+      self.int_attrs={'RequestCpus':1,
+                      'RequestMemory':1024,
+                      'RequestDisk':100000,
+                      'RequestGPUs':0 }
+
+   def query_idle(self):
+      """Return the number of idle jobs by cluster for my namespace"""
+
+      clusters={}
+      jobs=self.schedd.query_idle(projection=list(self.int_attrs.keys()))
+      for job in jobs:
+         cluster_key=[]
+         cluster_id={}
+         for attr in self.int_attrs:
+            try:
+               val=job[attr]
+               if type(val)==classad.classad.ExprTree:
+                  val=val.eval()
+               val=int(val)
+            except:
+               # if anything goes wrong, use default value
+               val=self.int_attrs[attr]
+            cluster_id[attr]=val
+            cluster_key.append(val)
+
+         cluster_key=tuple(cluster_key)
+         if cluster_key not in clusters:
+            clusters[cluster_key]={'full':cluster_id,'value':0}
+         clusters[cluster_key]['value']+=1
+      return clusters
 
