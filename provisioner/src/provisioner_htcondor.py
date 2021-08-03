@@ -27,13 +27,18 @@ class ProvisionerSchedd:
 
    def query_idle(self, projection=[]):
       """Return the list of idle jobs for my namespace"""
+      return self.query(job_status=1, projection=projection)
+
+
+   def query(self, job_status, projection=[]):
+      """Return the list of jobs for my namespace"""
 
       jobs=[]
 
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         jobs+=s.xquery(constraint='(JobStatus=?=1)&&(prp_namespace=?="%s")'%self.namespace, projection=projection)
+         jobs+=s.xquery(constraint='(JobStatus=?=%i)&&(prp_namespace=?="%s")'%(job_status,self.namespace), projection=projection)
 
       return jobs
 
@@ -94,9 +99,14 @@ class ProvisionerClusteredSchedd:
 
    def query_idle(self):
       """Return the number of idle jobs by cluster for my namespace"""
+      return self.query(job_status=1)
+
+
+   def query(self, job_status):
+      """Return the number of jobs by cluster for my namespace"""
 
       clusters={}
-      jobs=self.schedd.query_idle(projection=list(self.int_attrs.keys()))
+      jobs=self.schedd.query(job_status=job_status, projection=list(self.int_attrs.keys()))
       for job in jobs:
          cluster_key=[]
          cluster_id={}
