@@ -32,6 +32,8 @@ ADD condor.d/* /etc/condor/config.d/
 ADD scripts/container_startup.sh /usr/sbin/container_startup.sh
 RUN chmod a+rx /usr/sbin/container_startup.sh
 
+RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
+
 #
 # Accepts env variables
 # CONDOR_HOST NUM_CPUS MEMORY RESERVED_DISK STARTD_NOCLAIM_SHUTDOWN
