@@ -1,0 +1,17 @@
+To create the prp-wn.token:
+==============================
+Log into prp-cm-0.
+Execute
+export NAMESPACE=<namespace>
+condor_token_create -identity $NAMESPACE/prp-startd@htcondor-portal.svc.cluster.local \
+                    -authz READ \
+                    -authz ADVERTISE_MASTER \
+                    -authz ADVERTISE_STARTD
+
+
+Save output in prp-wn-$NAMESPACE.token file.
+
+Now create the secret
+#kubectl delete secret prp-htcondor-wn-secret -n "$NAMESPACE"
+kubectl create secret generic prp-htcondor-wn-secret -n "$NAMESPACE" --from-file=prp-wn.token=prp-wn-$NAMESPACE.token
+
