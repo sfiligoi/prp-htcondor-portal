@@ -7,30 +7,66 @@
 #
 
 class ProvisionerEventLoop:
-   def __init__(self, schedd_obj, k8s_obj):
+   def __init__(self, log_obj, schedd_obj, collector_obj, k8s_obj, max_pods_per_cluster):
+      self.log_obj = log_obj
       self.schedd = schedd_obj
+      self.collector = collector_obj
       self.k8s = k8s_obj
+      self.max_pods_per_cluster = max_pods_per_cluster
 
    def one_iteration(self):
-      condor_clusters = self.schedd.query_idle()
-      k8s_clusters = self.k8s.query()
+      schedd_jobs = self.schedd.query_idle()
+      startd_pods = self.collector.query_startds()
+      k8s_pods = self.k8s.query_unclaimed(startd_pods)
 
-      all_clusters_set = set(condor_clusters.keys())|set(k8s_clusters.keys())
+      del startd_pods
+
+      schedd_clusters = self._cluster_jobs(schedd_jobs)
+      k8s_clusters = self._cluster_pods(k8s_pods)
+
+      del schedd_jobs
+      del k8s_pods
+
+      all_clusters_set = set(schedd_clusters.keys())|set(k8s_clusters.keys())
       for ckey in all_clusters_set:
-         if ckey in condor_clusters:
-             self._one_cluster(ckey, condor_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
+         if ckey in schedd_clusters:
+             self._provision_cluster(ckey, schedd_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
          else:
             # we have k8s cluster, but no condor jobs
             pass # noop for now, may eventually do something
 
        # explicit cleanup to avoid accidental reuse 
        del all_clusters_set
-       del condor_clusters
+       del schedd_clusters
        del k8s_clusters
 
 
    # INTERNAL
 
-   def _one_cluster(self, cluster_id, condor_cluster, k8s_cluster):
-      # TBD
+   def _provision_cluster(self, cluster_id, schedd_cluster, k8s_cluster):
+      "Check if we have enough k8s clusters. Submit more if needed"
+      n_jobs_idle = schedd_cluster.count_idle()
+      if n_jobs_idle==0:
+         self.log_obj.log_debug("n_jobs_idle==0 found!")
+         return # should never get in here, but just in case (nothing to do, we are done)
+
+      # assume some latency and pod reuse
+      min_pods = 1 + (n_jobs_idle/4)
+      if min_pods>20:
+         # when we have a lot of jobs, slow futher
+         min_pods = 20 + (min_pods-20)/4
+
+      if min_pods>self.max_pods_per_cluster:
+         min_pods = self.max_pods_per_cluster
+
+      n_pods_unclaimed = k8s_cluster.count_unclaimed()
+      self.log_obj.log_debug("Cluster %s n_jobs_idle %i n_pods_unclaimed %i min_pods %i",
+                             (cluster_id.get_id(), n_jobs_idle, n_pods_unclaimed, min_pods)
+      if n_pods_unclaimed>=min_pods:
+         pass # we have enough pods, do nothing for now
+         # we may want to do some sanity checks here, eventually
+      else:
+         self.k8s.submit(cluster_id, min_pods-n_pods_unclaimed)
+
       return
+

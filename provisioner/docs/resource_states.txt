@@ -1,0 +1,28 @@
+Resource states
+===============
+
+Pod Cluster
+===========
+All pods will be wrapped in a Job abstraction.
+Each job can have 1 or more Pods associated with it.
+
+Note that a Job can fail at the beginning (without submitting any pods), but that's an exceptional case.
+The Job wrapper could re-start failed Pods, but we will not use that feature, as the errors are likely un-recoverable.
+A job is Completed when all of the pods have completed.
+
+
+Pod states
+==========
+Each pod goes through the following states:
+Pending  -(exception)-> Failed
+V              ^
+Starting (Image pull, etc.)
+V
+Initializing (Running, but not yet next stage)
+V
+Registered (HTCondor collector sees it)
+V  ^
+Claimed
+V
+Completed (Auto shut-down)
+
