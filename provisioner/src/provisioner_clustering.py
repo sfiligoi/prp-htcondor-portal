@@ -6,7 +6,7 @@
 # Implement the clusterinng
 #
 
-from collectins import OrderedDict
+from collections import OrderedDict
 import copy
 import re
 
@@ -70,7 +70,7 @@ class ProvisionerClusteringAttributes:
 class ProvisionerCluster:
    def __init__(self, key, attr_vals):
       self.key = key
-      self.attr_vals = att_vals
+      self.attr_vals = attr_vals
       self.elements = []
 
    def append(self, el):
@@ -79,13 +79,13 @@ class ProvisionerCluster:
 
 class ProvisionerScheddCluster(ProvisionerCluster):
    def __init__(self, key, attr_vals, schedd_attrs):
-      super()._init__(key, attr_vals)
+      ProvisionerCluster.__init__(self, key, attr_vals)
       self.schedd_attrs = schedd_attrs
 
    def count_idle(self):
       cnt = 0
       for job in self.elements:
-         status="%s"%job['JobStatus']:
+         status="%s"%job['JobStatus']
          if status=="1":
             cnt+=1
       return cnt
@@ -94,17 +94,17 @@ class ProvisionerClustering:
    def __init__(self):
       self.attrs=ProvisionerClusteringAttributes()
 
-   def cluster_schedd_jobs(schedd_jobs):
+   def cluster_schedd_jobs(self, schedd_jobs):
       clusters={}
       for job in schedd_jobs:
          job_attrs=[]
          key_attrs={}
-         for k in self.attributes.keys():
-            jobk = self.expand_schedd_attr(k)
+         for k in self.attrs.attributes.keys():
+            jobk = self.attrs.expand_schedd_attr(k)
             if jobk in job.keys():
                val = job[jobk]
             else:
-               val = self.attributes[k]
+               val = self.attrs.attributes[k]
             job_attrs.append("%s"%val)
             key_attrs[jobk]=val
          job_key=";".join(job_attrs)

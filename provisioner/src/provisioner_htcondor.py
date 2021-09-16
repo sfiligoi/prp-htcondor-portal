@@ -40,21 +40,21 @@ class ProvisionerSchedd:
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
          myjobs=s.xquery(constraint='(JobStatus=?=%i)&&(RequestNamespace=?="%s")'%(job_status,self.namespace), projection=full_projection)
-         self._append_jobs(jobs, myjobs)
+         self._append_jobs(sclassad['Name'], jobs, myjobs)
 
       return jobs
 
 
    # INTERNAL
-   def _append_jobs(self, jobs, myjobs):
+   def _append_jobs(self, schedd_name, jobs, myjobs):
       """jobs is a list and will be updated in-place"""
       for job in myjobs:
-         jobattrs=['ScheddName':sclassad['Name']]
+         jobattrs={'ScheddName':schedd_name}
          for k in job.keys():
             # convert all values to strings, for easier management
             jobattrs[k]="%s"%job[k]
-          jobs.append(jobattrs)
-       return
+         jobs.append(jobattrs)
+      return
 
    def _get_schedd_objs(self):
       sobjs=[]
