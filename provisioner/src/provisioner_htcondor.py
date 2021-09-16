@@ -33,17 +33,29 @@ class ProvisionerSchedd:
    def query(self, job_status, projection=[]):
       """Return the list of jobs for my namespace"""
 
+      full_projection=['ClusterId','ProcId','JobStatus','RequestNamespace']+projection
       jobs=[]
 
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         jobs+=s.xquery(constraint='(JobStatus=?=%i)&&(prp_namespace=?="%s")'%(job_status,self.namespace), projection=projection)
+         myjobs=s.xquery(constraint='(JobStatus=?=%i)&&(RequestNamespace=?="%s")'%(job_status,self.namespace), projection=full_projection)
+         self._append_jobs(jobs, myjobs)
 
       return jobs
 
 
    # INTERNAL
+   def _append_jobs(self, jobs, myjobs):
+      """jobs is a list and will be updated in-place"""
+      for job in myjobs:
+         jobattrs=['ScheddName':sclassad['Name']]
+         for k in job.keys():
+            # convert all values to strings, for easier management
+            jobattrs[k]="%s"%job[k]
+          jobs.append(jobattrs)
+       return
+
    def _get_schedd_objs(self):
       sobjs=[]
       c = htcondor.Collector()
@@ -75,56 +87,4 @@ class ProvisionerSchedd:
                break # found, we are done
          # ignore all others
       return found
-
-
-
-class ProvisionerClusteredSchedd:
-   """HTCondor schedd interface with clustering"""
-
-   def __init__(self, namespace, trusted_schedds):
-      """
-      Arguments:
-         namespace: string
-             Monitored namespace
-         trusted_schedds: dictionary, NameRegexp:AuthenticatedIdentityRegexp
-             Set of schedds to query. Both name and AuthenticatedIdentity are regexp.
-      """
-      self.schedd=ProvisionerSchedd(namespace, trusted_schedds)
-
-      # fix list of attributes and their defaults here
-      self.int_attrs={'RequestCpus':1,
-                      'RequestMemory':1024,
-                      'RequestDisk':100000,
-                      'RequestGPUs':0 }
-
-   def query_idle(self):
-      """Return the number of idle jobs by cluster for my namespace"""
-      return self.query(job_status=1)
-
-
-   def query(self, job_status):
-      """Return the number of jobs by cluster for my namespace"""
-
-      clusters={}
-      jobs=self.schedd.query(job_status=job_status, projection=list(self.int_attrs.keys()))
-      for job in jobs:
-         cluster_key=[]
-         cluster_id={}
-         for attr in self.int_attrs:
-            try:
-               val=job[attr]
-               if type(val)==classad.classad.ExprTree:
-                  val=val.eval()
-               val=int(val)
-            except:
-               # if anything goes wrong, use default value
-               val=self.int_attrs[attr]
-            cluster_id[attr]=val
-            cluster_key.append(val)
-
-         cluster_key=tuple(cluster_key)
-         if cluster_key not in clusters:
-            clusters[cluster_key]={'full':cluster_id,'value':0}
-         clusters[cluster_key]['value']+=1
-      return clusters
 

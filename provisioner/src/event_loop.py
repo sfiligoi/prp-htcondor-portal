@@ -30,11 +30,14 @@ class ProvisionerEventLoop:
 
       all_clusters_set = set(schedd_clusters.keys())|set(k8s_clusters.keys())
       for ckey in all_clusters_set:
-         if ckey in schedd_clusters:
-             self._provision_cluster(ckey, schedd_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
-         else:
-            # we have k8s cluster, but no condor jobs
-            pass # noop for now, may eventually do something
+         try:
+            if ckey in schedd_clusters:
+               self._provision_cluster(ckey, schedd_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
+            else:
+               # we have k8s cluster, but no condor jobs
+               pass # noop for now, may eventually do something
+         except:
+            log.debug("[ProvisionerEventLoop] Exception in cluster  %s"%ckey)
 
        # explicit cleanup to avoid accidental reuse 
        del all_clusters_set
@@ -51,7 +54,7 @@ class ProvisionerEventLoop:
       "Check if we have enough k8s clusters. Submit more if needed"
       n_jobs_idle = schedd_cluster.count_idle()
       if n_jobs_idle==0:
-         self.log_obj.log_debug("n_jobs_idle==0 found!")
+         self.log_obj.log_debug("ProvisionerEventLoop] Cluster %s n_jobs_idle==0 found!"%cluster_id)
          return # should never get in here, but just in case (nothing to do, we are done)
 
       # assume some latency and pod reuse
@@ -64,8 +67,8 @@ class ProvisionerEventLoop:
          min_pods = self.max_pods_per_cluster
 
       n_pods_unclaimed = k8s_cluster.count_unclaimed()
-      self.log_obj.log_debug("Cluster %s n_jobs_idle %i n_pods_unclaimed %i min_pods %i",
-                             (cluster_id.get_id(), n_jobs_idle, n_pods_unclaimed, min_pods)
+      self.log_obj.log_debug("ProvisionerEventLoop] Cluster %s n_jobs_idle %i n_pods_unclaimed %i min_pods %i"%
+                             (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods)
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
          # we may want to do some sanity checks here, eventually

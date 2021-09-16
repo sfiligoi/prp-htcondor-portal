@@ -85,7 +85,7 @@ class ProvisionerScheddCluster(ProvisionerCluster):
    def count_idle(self):
       cnt = 0
       for job in self.elements:
-         status="%s"%job.attrs['JobStatus']:
+         status="%s"%job['JobStatus']:
          if status=="1":
             cnt+=1
       return cnt
@@ -101,8 +101,8 @@ class ProvisionerClustering:
          key_attrs={}
          for k in self.attributes.keys():
             jobk = self.expand_schedd_attr(k)
-            if jobk in job.attrs:
-               val = job.attrs[jobk]
+            if jobk in job.keys():
+               val = job[jobk]
             else:
                val = self.attributes[k]
             job_attrs.append("%s"%val)
