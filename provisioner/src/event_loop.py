@@ -21,8 +21,9 @@ class ProvisionerEventLoop:
 
       del startd_pods
 
-      schedd_clusters = self._cluster_jobs(schedd_jobs)
-      k8s_clusters = self._cluster_pods(k8s_pods)
+      clustering = ProvisionerClustering()
+      schedd_clusters = clustering.cluster_schedd_jobs(schedd_jobs)
+      k8s_clusters = clustering.cluster_k8s_pods(k8s_pods)
 
       del schedd_jobs
       del k8s_pods
@@ -42,6 +43,9 @@ class ProvisionerEventLoop:
 
 
    # INTERNAL
+   def _cluster_jobs(schedd_jobs):
+      for job in schedd_jobs:
+
 
    def _provision_cluster(self, cluster_id, schedd_cluster, k8s_cluster):
       "Check if we have enough k8s clusters. Submit more if needed"
@@ -66,7 +70,7 @@ class ProvisionerEventLoop:
          pass # we have enough pods, do nothing for now
          # we may want to do some sanity checks here, eventually
       else:
-         self.k8s.submit(cluster_id, min_pods-n_pods_unclaimed)
+         self.k8s.submit(k8s_cluster, min_pods-n_pods_unclaimed)
 
       return
 
