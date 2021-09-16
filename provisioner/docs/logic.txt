@@ -4,12 +4,12 @@ The PRP's HTCondor provisioner
 Infrastructure considerations
 -----------------------------
 
-The desired semantics of the provisioner is to operate a a k8s controller:
+The desired semantics of the provisioner is to operate as a k8s controller:
 https://kubernetes.io/docs/concepts/architecture/controller/
 
 But does not have to implemented as a custom resource.
 Indeed, the initial plan is to run it as a regular pod (managed by a deployment),
-so it can be launched without nay special privileges.
+so it can be launched without any special privileges.
 
 High level goal
 ---------------
@@ -23,13 +23,13 @@ That will allow for some worker pods to run multiple jobs,
 and thus lower the burden on the k8s system.
 
 The provisioner is a namespace-bound process, so it only serves users belonging
-to its own namespace. It is assumed that the schedd will aociate a valid
+to its own namespace. It is assumed that the schedd will associate a valid
 namespace to each job (in a secure and trustworthy manner).
 
 Users can specify what kind of resources they need;
 the provisioner will provision each kind separately
 and only match jobs with the right characteristics 
-to those worke pods.
+to those worker pods.
 
 Provisioning logic
 ------------------
