@@ -33,20 +33,30 @@ class ProvisionerK8S:
          # Read config from ~/.kube/config
          kubernetes.config.load_kube_config()
 
-   def query_idle(self):
-      """Return the list of idle jobs for my namespace"""
-      return self.query(job_status=1)
-
-
-   def query(self, job_status):
+   def query(self):
       """Return the list of jobs for my namespace"""
 
-      jobs=[]
+      pods=[]
 
-      k8s = kubernetes.client.BatchV1Api()
-      jobjs = k8s.list_namespaced_job(namespace=self.namespacei,
-                                      label_selector="prp-htcondor-portal=wn")
+      k8s = kubernetes.client.CoreV1Api()
+      plist = k8s.list_namespaced_pod(namespace=self.namespace,
+                                     label_selector="prp-htcondor-portal=wn")
       # TBD: We may need to check for continuation flag
-      return jobjs.items:
+      self._append_pods(pods,plist.items)
 
+      return pods
+
+   # INTERNAL
+   def _append_pods(self, pods, mypods):
+      """pods is a list and will be updated in-place"""
+      for pod in mypods:
+         podattrs={}
+         labels=pod.metadata.labels
+         for k in labels.keys():
+            # convert all values to strings, for easier management
+            podattrs[k]="%s"%labels[k]
+         del labels
+         podattrs['Phase'] = pod.status.phase
+         pods.append(podattrs)
+      return
 
