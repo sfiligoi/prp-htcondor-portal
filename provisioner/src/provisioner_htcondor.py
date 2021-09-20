@@ -88,3 +88,48 @@ class ProvisionerSchedd:
          # ignore all others
       return found
 
+
+class ProvisionerCollector:
+   """HTCondor Collector/startd interface"""
+
+   def __init__(self, namespace, startd_identity):
+      """
+      Arguments:
+         namespace: string
+             Monitored namespace
+         startd_identity: string
+             AuthenticatedIdentityi Regexp used as a whitelist
+      """
+      self.namespace = copy.deepcopy(namespace)
+      self.startd_identity = copy.deepcopy(startd_identity)
+
+   def query(self,  projection=[]):
+      """Return the list of startds for my namespace"""
+
+      full_projection=['Name','AuthenticatedIdentity','State','Activity','ProvisionedName','ProvisionedNamespace']+projection
+      startds=[]
+
+      c = htcondor.Collector()
+      slist=c.query(ad_type=htcondor.htcondor.AdTypes.Startd,projection=full_projection,
+                    constraint='ProvisionedNamespace=?="%s"'%self.namespace)
+      for s in slist:
+         try:
+            sname=s['Name']
+            sauthid=s['AuthenticatedIdentity']
+         except:
+            # if I cannot find all, it is invalid
+            continue
+         if not re.fullmatch(self.startd_identity,sauthid):
+            # not trusted, ignore
+            continue
+         adattrs={}
+         for k in s.keys():
+            # convert all values to strings, for easier management
+            adattrs[k]="%s"%s[k]
+         startds.append(adattrs)
+         # cleaup to avoid accidental reuse
+         del sname
+         del sauthid
+
+      return startds
+
