@@ -90,6 +90,28 @@ class ProvisionerScheddCluster(ProvisionerCluster):
             cnt+=1
       return cnt
 
+class ProvisionerK8SCluster(ProvisionerCluster):
+   def __init__(self, key, attr_vals, pod_attrs):
+      ProvisionerCluster.__init__(self, key, attr_vals)
+      self.pod_attrs = pod_attrs
+
+   def count_unclaimed(self):
+      cnt = 0
+      for el in self.elements:
+         pod_el = el[0]
+         phase="%s"%pod_el['Phase']
+         if phase=="Running":
+            startd_el = el[1]
+            if startd_el!=None:
+              state = "%s"%startd_el['State']
+            else:
+              state = "None"
+            if state!="Claimed":
+              cnt+=1
+         else:
+            cnt+=1
+      return cnt
+
 class ProvisionerClustering:
    def __init__(self):
       self.attrs=ProvisionerClusteringAttributes()
@@ -116,4 +138,41 @@ class ProvisionerClustering:
          del key_attrs
 
       return clusters
+
+
+   def cluster_k8s_pods(self, k8s_pods, startd_ads):
+      startd_dict={}
+      for ad in startd_ads:
+         k=ad["ProvisionedName"]
+         startd_dict[k]=ad
+      del ad
+      del k
+
+      clusters={}
+      for pod in k8s_pods:
+         if pod['Name'] in startd_dict:
+           pod_ad = startd_dict[pod['Name'] ]
+         else:
+           pod_ad = None
+         pod_attrs=[]
+         key_attrs={}
+         for k in self.attrs.attributes.keys():
+            podk = self.attrs.expand_k8s_attr(k)
+            if podk in pod.keys():
+               val = pod[podk]
+            else:
+               val = self.attrs.attributes[k]
+            pod_attrs.append("%s"%val)
+            key_attrs[podk]=val
+         pod_key=";".join(pod_attrs)
+         if pod_key not in clusters:
+            clusters[pod_key] = ProvisionerK8SCluster(pod_key, pod_attrs, key_attrs)
+         clusters[pod_key].append( (pod,pod_ad) )
+         # cleanup to avoid accidental reuse
+         del pod_attrs
+         del key_attrs
+         del pod_ad
+
+      return clusters
+
  
