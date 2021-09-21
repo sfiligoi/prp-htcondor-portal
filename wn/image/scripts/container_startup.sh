@@ -18,9 +18,9 @@ add_values_to () {
     printf "%s=%s\n" >> "/etc/condor/config.d/$config" "$@"
 }
 
-full_num_cpus=${NUM_CPUS:-1]
-full_memory=${MEMORY:-1024}
-full_num_gpus=${NUM_GPUS:-0]
+full_num_cpus="${NUM_CPUS:-1}"
+full_memory="${MEMORY:-1024}"
+full_num_gpus="${NUM_GPUS:-0}"
 
 # Create a config file from the environment.
 # The config file needs to be on disk instead of referencing the env
@@ -32,7 +32,7 @@ add_values_to 01-env.conf \
     MEMORY "${full_memory}" \
     RESERVED_DISK "${RESERVED_DISK:-1024}" \
     USE_POOL_PASSWORD "${USE_POOL_PASSWORD:-no}"
-if [ "${full_num_gpus}" -ne "0" }; then
+if [ "x${full_num_gpus}" != "x0" ]; then
    echo "use feature : GPUs" >> /etc/condor/config.d/01-env.conf
 fi
 
