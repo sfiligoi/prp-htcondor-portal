@@ -48,8 +48,8 @@ echo 'STARTD_EXPRS = $(STARTD_EXPRS) ProvisionedNamespace ProvisionedName Provis
   >> /etc/condor/config.d/02-k8s-env.conf
 
 add_values_to 01-k8s-env.conf \
-    ProvisionedNamespace "${K8S_NAMESPACE:-Invalid}" \
-    ProvisionedName "${HOSTNAME:-Unknown}" \
+    ProvisionedNamespace "\"${K8S_NAMESPACE:-Invalid}\"" \
+    ProvisionedName "\"${HOSTNAME:-Unknown}\"" \
     ProvisionedCPUs "${full_num_cpus}" \
     ProvisionedMemory "${full_memory}" \
     ProvisionedGPUs "${full_num_gpus}"
