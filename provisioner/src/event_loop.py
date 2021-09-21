@@ -6,6 +6,8 @@
 # Implement the event loop
 #
 
+import provisioner_clustering
+
 class ProvisionerEventLoop:
    def __init__(self, log_obj, schedd_obj, collector_obj, k8s_obj, max_pods_per_cluster):
       self.log_obj = log_obj
@@ -16,16 +18,15 @@ class ProvisionerEventLoop:
 
    def one_iteration(self):
       schedd_jobs = self.schedd.query_idle()
-      startd_pods = self.collector.query_startds()
-      k8s_pods = self.k8s.query_unclaimed(startd_pods)
+      startd_pods = self.collector.query()
+      k8s_pods = self.k8s.query()
 
-      del startd_pods
-
-      clustering = ProvisionerClustering()
+      clustering = provisioner_clustering.ProvisionerClustering()
       schedd_clusters = clustering.cluster_schedd_jobs(schedd_jobs)
-      k8s_clusters = clustering.cluster_k8s_pods(k8s_pods)
+      k8s_clusters = clustering.cluster_k8s_pods(k8s_pods, startd_pods)
 
       del schedd_jobs
+      del startd_pods
       del k8s_pods
 
       all_clusters_set = set(schedd_clusters.keys())|set(k8s_clusters.keys())
@@ -46,10 +47,6 @@ class ProvisionerEventLoop:
 
 
    # INTERNAL
-   def _cluster_jobs(schedd_jobs):
-      for job in schedd_jobs:
-
-
    def _provision_cluster(self, cluster_id, schedd_cluster, k8s_cluster):
       "Check if we have enough k8s clusters. Submit more if needed"
       n_jobs_idle = schedd_cluster.count_idle()
