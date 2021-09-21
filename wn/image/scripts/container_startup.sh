@@ -18,16 +18,24 @@ add_values_to () {
     printf "%s=%s\n" >> "/etc/condor/config.d/$config" "$@"
 }
 
+full_num_cpus=${NUM_CPUS:-1]
+full_memory=${MEMORY:-1024}
+full_num_gpus=${NUM_GPUS:-0]
+
 # Create a config file from the environment.
 # The config file needs to be on disk instead of referencing the env
 # at run time so condor_config_val can work.
 echo "# This file was created by $prog" > /etc/condor/config.d/01-env.conf
 add_values_to 01-env.conf \
     CONDOR_HOST "${CONDOR_SERVICE_HOST:-${CONDOR_HOST:-\$(FULL_HOSTNAME)}}" \
-    NUM_CPUS "${NUM_CPUS:-1}" \
-    MEMORY "${MEMORY:-1024}" \
+    NUM_CPUS "${full_num_cpus}" \
+    MEMORY "${full_memory}" \
     RESERVED_DISK "${RESERVED_DISK:-1024}" \
     USE_POOL_PASSWORD "${USE_POOL_PASSWORD:-no}"
+if [ "${full_num_gpus}" -ne "0" }; then
+   echo "use feature : GPUs" >> /etc/condor/config.d/01-env.conf
+fi
+
 
 if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
   echo "# This file was created by $prog" > /etc/condor/config.d/01-noclaim-shutdown.conf
@@ -35,7 +43,16 @@ if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
       STARTD_NOCLAIM_SHUTDOWN "${STARTD_NOCLAIM_SHUTDOWN}"
 fi
 
+echo "# This file was created by $prog" > /etc/condor/config.d/02-k8s-env.conf
+echo 'STARTD_EXPRS = $(STARTD_EXPRS) ProvisionedNamespace ProvisionedName ProvisionedCPUs ProvisionedMemory ProvisionedGPUs' \
+  >> /etc/condor/config.d/02-k8s-env.conf
 
+add_values_to 01-k8s-env.conf \
+    ProvisionedNamespace "${K8S_NAMESPACE:-Invalid}" \
+    ProvisionedName "${HOSTNAME:-Unknown}" \
+    ProvisionedCPUs "${full_num_cpus}" \
+    ProvisionedMemory "${full_memory}" \
+    ProvisionedGPUs "${full_num_gpus}"
 
 # Bug workaround: daemons will die if they can't raise the number of FD's;
 # cap the request if we can't raise it.
