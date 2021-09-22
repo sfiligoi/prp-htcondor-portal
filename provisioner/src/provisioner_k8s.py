@@ -14,13 +14,14 @@ import kubernetes
 class ProvisionerK8S:
    """Kubernetes Query interface"""
 
-   def __init__(self, namespace):
+   def __init__(self, namespace, condor_host = "prp-cm-htcondor.htcondor-portal.svc.cluster.local"):
       """
       Arguments:
          namespace: string
              Monitored namespace
       """
       self.namespace = copy.deepcopy(namespace)
+      self.condor_host = condor_host
 
    def authenticate(self, use_service_account=True):
       """Load credentials needed for authentication"""
@@ -46,9 +47,7 @@ class ProvisionerK8S:
 
       return pods
 
-   def create_job(self):
-      condor_host = "prp-cm-htcondor.htcondor-portal.svc.cluster.local"
-
+   def create_job(self, n_pods=1):
       labels = {
                  'k8s-app': 'prp-wn',
                  'prp-htcondor-portal': 'wn',
@@ -66,7 +65,7 @@ class ProvisionerK8S:
              {'name': 'MEMORY', 'value': '4096'}]
       env.append({'name': 'K8S_NAMESPACE', 'value': self.namespace})
       env.append({'name': 'STARTD_NOCLAIM_SHUTDOWN', 'value': '1200'})
-      env.append({'name': 'CONDOR_HOST', 'value': condor_host})
+      env.append({'name': 'CONDOR_HOST', 'value': self.condor_host})
                   
 
       body = {
@@ -78,6 +77,8 @@ class ProvisionerK8S:
             'labels': labels
          },
          'spec': {
+            'parallelism': n_pods,
+            'completions': n_pods,
             'template': {
                'metadata': {
                   'labels': labels
