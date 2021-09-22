@@ -63,14 +63,14 @@ class ProvisionerEventLoop:
       if min_pods>self.max_pods_per_cluster:
          min_pods = self.max_pods_per_cluster
 
-      n_pods_unclaimed = k8s_cluster.count_unclaimed()
+      n_pods_unclaimed = k8s_cluster.count_unclaimed() if k8s_clusters!=None else 0
       self.log_obj.log_debug("ProvisionerEventLoop] Cluster %s n_jobs_idle %i n_pods_unclaimed %i min_pods %i"%
                              (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods)
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
          # we may want to do some sanity checks here, eventually
       else:
-         self.k8s.submit(k8s_cluster, min_pods-n_pods_unclaimed)
+         self.k8s.submit(schedd_cluster.get_attr_dict(), min_pods-n_pods_unclaimed)
 
       return
 

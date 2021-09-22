@@ -47,26 +47,30 @@ class ProvisionerK8S:
 
       return pods
 
-   def create_job(self, n_pods=1):
+   def submit(self, attrs, n_pods=1):
+      # first ensure that the basic int values are valid
+      int_vals={}
+      for k in ('CPUs','GPUs','Memory'):
+         int_vals[k] = int(attrs[k])
+
       labels = {
                  'k8s-app': 'prp-wn',
                  'prp-htcondor-portal': 'wn',
-                 'PodCPUs': '1',
-                 'PodGPUs': '1',
-                 'PodMemory': '4096'
+                 'PodCPUs':   "%i"%int_vals['CPUs'],
+                 'PodGPUs':   "%i"%int_vals['GPUs'],
+                 'PodMemory': "%i"%int_vals['Memory']
                }
       req = {
-               'memory': '4096Mi',
-               'cpu': 2,
-               'nvidia.com/gpu': 1
+               'memory':  '%iMi'%int_vals['Memory'],
+               'cpu':            int_vals['CPUs'],
+               'nvidia.com/gpu': int_vals['GPUs']
             }
-      env = [{'name': 'NUM_CPUS', 'value': '2'},
-             {'name': 'NUM_GPUS', 'value': '1'},
-             {'name': 'MEMORY', 'value': '4096'}]
-      env.append({'name': 'K8S_NAMESPACE', 'value': self.namespace})
-      env.append({'name': 'STARTD_NOCLAIM_SHUTDOWN', 'value': '1200'})
-      env.append({'name': 'CONDOR_HOST', 'value': self.condor_host})
-                  
+      env = [{'name': 'CONDOR_HOST', 'value': self.condor_host},
+             {'name': 'STARTD_NOCLAIM_SHUTDOWN', 'value': '1200'},
+             {'name': 'K8S_NAMESPACE', 'value': self.namespace},
+             {'name': 'NUM_CPUS', 'value': "%i"%int_vals['CPUs']},
+             {'name': 'NUM_GPUS', 'value': "%i"%int_vals['GPUs']},
+             {'name': 'MEMORY',   'value': "%i"%int_vals['Memory']}]
 
       body = {
          'apiVersion': 'batch/v1',
