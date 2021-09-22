@@ -46,6 +46,80 @@ class ProvisionerK8S:
 
       return pods
 
+   def create_job(self):
+      condor_host = "prp-cm-htcondor.htcondor-portal.svc.cluster.local"
+
+      labels = {
+                 'k8s-app': 'prp-wn',
+                 'prp-htcondor-portal': 'wn',
+                 'PodCPUs': '1',
+                 'PodGPUs': '1',
+                 'PodMemory': '4096'
+               }
+      req = {
+               'memory': '4096Mi',
+               'cpu': 2,
+               'nvidia.com/gpu': 1
+            }
+      env = [{'name': 'NUM_CPUS', 'value': '2'},
+             {'name': 'NUM_GPUS', 'value': '1'},
+             {'name': 'MEMORY', 'value': '4096'}]
+      env.append({'name': 'K8S_NAMESPACE', 'value': self.namespace})
+      env.append({'name': 'STARTD_NOCLAIM_SHUTDOWN', 'value': '1200'})
+      env.append({'name': 'CONDOR_HOST', 'value': condor_host})
+                  
+
+      body = {
+         'apiVersion': 'batch/v1',
+         'kind': 'Job',
+         'metadata': {
+            'name': 'prp-wn-2', #TBD
+            'namespace': self.namespace,
+            'labels': labels
+         },
+         'spec': {
+            'template': {
+               'metadata': {
+                  'labels': labels
+               },
+               'spec': {
+                  'restartPolicy': 'Never',
+                  'containers': [{
+                     'name': 'htcondor',
+                     'image': 'sfiligoi/prp-portal-wn',
+                     'env': env,
+                     'resources': {
+                        'limits': req,
+                        'requests': req
+                     },
+                     'volumeMounts': [{
+                        'name': 'configpasswd',
+                        'mountPath': '/etc/condor/tokens.d/prp-wn.token',
+                        'subPath': 'prp-wn.token',
+                        'readOnly': True
+                      }]
+                  }],
+                  'volumes': [{
+                     'name': 'configpasswd',
+                     'secret': {
+                        'secretName': 'prp-htcondor-wn-secret',
+                        'items': [{
+                           'key': 'prp-wn.token',
+                           'path': 'prp-wn.token',
+                           'defaultMode': 256
+                        }]
+                     }
+                  }]
+               }
+            }
+         }
+      }
+
+      k8s = kubernetes.client.BatchV1Api()
+      k8s.create_namespaced_job(body=body, namespace=self.namespace)
+
+
+
    # INTERNAL
    def _append_pods(self, pods, mypods):
       """pods is a list and will be updated in-place"""
