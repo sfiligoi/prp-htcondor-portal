@@ -76,6 +76,15 @@ class ProvisionerCluster:
    def append(self, el):
       self.elements.append(el)
 
+   def get_attr_dict(self):
+      p=ProvisionerClusteringAttributes()
+      attrs={}
+      i=0
+      for k in p.attributes.keys():
+         attrs[k] = self.attr_vals[]
+         i = i+1
+      return attrs
+
 
 class ProvisionerScheddCluster(ProvisionerCluster):
    def __init__(self, key, attr_vals, schedd_attrs):
