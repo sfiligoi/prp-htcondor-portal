@@ -9,7 +9,7 @@
 import copy
 import re
 import kubernetes
-
+import time
 
 class ProvisionerK8S:
    """Kubernetes Query interface"""
@@ -22,6 +22,8 @@ class ProvisionerK8S:
       """
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = condor_host
+      self.start_time = int(time.time())
+      self.submitted = 0
 
    def authenticate(self, use_service_account=True):
       """Load credentials needed for authentication"""
@@ -72,11 +74,14 @@ class ProvisionerK8S:
              {'name': 'NUM_GPUS', 'value': "%i"%int_vals['GPUs']},
              {'name': 'MEMORY',   'value': "%i"%int_vals['Memory']}]
 
+      job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
+      self.submitted = self.submitted + 1
+
       body = {
          'apiVersion': 'batch/v1',
          'kind': 'Job',
          'metadata': {
-            'name': 'prp-wn-2', #TBD
+            'name': job_name,
             'namespace': self.namespace,
             'labels': labels
          },
@@ -123,6 +128,7 @@ class ProvisionerK8S:
       k8s = kubernetes.client.BatchV1Api()
       k8s.create_namespaced_job(body=body, namespace=self.namespace)
 
+      return job_name
 
 
    # INTERNAL

@@ -81,7 +81,7 @@ class ProvisionerCluster:
       attrs={}
       i=0
       for k in p.attributes.keys():
-         attrs[k] = self.attr_vals[]
+         attrs[k] = self.attr_vals[i]
          i = i+1
       return attrs
 
@@ -154,8 +154,7 @@ class ProvisionerClustering:
       for ad in startd_ads:
          k=ad["ProvisionedName"]
          startd_dict[k]=ad
-      del ad
-      del k
+         del k
 
       clusters={}
       for pod in k8s_pods:
