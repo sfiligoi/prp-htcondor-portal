@@ -28,7 +28,6 @@ class ProvisionerClusteringAttributes:
 
    def __init__(self):
       self.attributes=OrderedDict()
-      self.attributes['Namespace']=None # fail is not specified 
       self.attributes['CPUs']=1
       self.attributes['Memory']=1024
       self.attributes['Disk']=100000
@@ -61,8 +60,6 @@ class ProvisionerClusteringAttributes:
    def get_k8s_attributes(self):
       attrs=[]
       for k in self.attributes.keys():
-        if k=="Namespace":
-           continue # namespace is native to k8s
         attrs.append(self.expand_k8s_attr(k))
       return attrs
 

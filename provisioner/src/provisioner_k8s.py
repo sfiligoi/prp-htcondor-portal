@@ -142,7 +142,6 @@ class ProvisionerK8S:
             podattrs[k]="%s"%labels[k]
          del labels
          podattrs['Name'] = pod.metadata.name
-         podattrs['Namespace'] = pod.metadata.namespace
          podattrs['Phase'] = pod.status.phase
          pods.append(podattrs)
       return
