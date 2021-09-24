@@ -107,7 +107,8 @@ class ProvisionerK8SCluster(ProvisionerCluster):
               state = "None"
             if state!="Claimed":
               cnt+=1
-         else:
+         elif phase not in ("Succeeded", "Failed"):
+            # Assume any other state is legitimate
             cnt+=1
       return cnt
 
@@ -142,7 +143,7 @@ class ProvisionerClustering:
    def cluster_k8s_pods(self, k8s_pods, startd_ads):
       startd_dict={}
       for ad in startd_ads:
-         k=ad["ProvisionedName"]
+         k=ad["K8SPodName"]
          startd_dict[k]=ad
          del k
 
