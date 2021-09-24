@@ -33,13 +33,13 @@ class ProvisionerSchedd:
    def query(self, job_status, projection=[]):
       """Return the list of jobs for my namespace"""
 
-      full_projection=['ClusterId','ProcId','JobStatus','RequestNamespace']+projection
+      full_projection=['ClusterId','ProcId','JobStatus','RequestK8SNamespace']+projection
       jobs=[]
 
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         myjobs=s.xquery(constraint='(JobStatus=?=%i)&&(RequestNamespace=?="%s")'%(job_status,self.namespace), projection=full_projection)
+         myjobs=s.xquery(constraint='(JobStatus=?=%i)&&(RequestK8SNamespace=?="%s")'%(job_status,self.namespace), projection=full_projection)
          self._append_jobs(sclassad['Name'], jobs, myjobs)
 
       return jobs
