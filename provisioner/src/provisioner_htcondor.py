@@ -48,12 +48,22 @@ class ProvisionerSchedd:
    # INTERNAL
    def _append_jobs(self, schedd_name, jobs, myjobs):
       """jobs is a list and will be updated in-place"""
+      minvals={'RequestMemory':1024,'RequestDisk':100000}
       for job in myjobs:
          jobattrs={'ScheddName':schedd_name}
          for k in job.keys():
-            # convert all values to strings, for easier management
-            # also expand all expresstions
-            jobattrs[k]="%s"%job.eval(k)
+            if k in minvals.keys():
+               # the default RequestMemory and RequestDisk in condor is dynamic
+               # and the initial value (after eval) is way too low
+               # Treat very low values as undefines
+               val = int(job.eval(k))
+               if val>=minvals[k]:
+                  jobattrs[k]="%s"%val
+               #else pretend it is not there
+            else:
+               # convert all values to strings, for easier management
+               # also expand all expresstions
+               jobattrs[k]="%s"%job.eval(k)
          jobs.append(jobattrs)
       return
 
