@@ -44,7 +44,7 @@ if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
 fi
 
 echo "# This file was created by $prog" > /etc/condor/config.d/02-k8s-env.conf
-echo 'STARTD_EXPRS = $(STARTD_EXPRS) K8SNamespace K8SPodNames' \
+echo 'STARTD_EXPRS = $(STARTD_EXPRS) K8SNamespace K8SPodName' \
   >> /etc/condor/config.d/02-k8s-env.conf
 
 add_values_to 01-k8s-env.conf \
