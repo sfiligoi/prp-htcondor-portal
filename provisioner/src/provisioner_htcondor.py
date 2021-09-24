@@ -106,12 +106,12 @@ class ProvisionerCollector:
    def query(self,  projection=[]):
       """Return the list of startds for my namespace"""
 
-      full_projection=['Name','AuthenticatedIdentity','State','Activity','ProvisionedName','ProvisionedNamespace']+projection
+      full_projection=['Name','AuthenticatedIdentity','State','Activity','K8SPodName','K8SNamespace']+projection
       startds=[]
 
       c = htcondor.Collector()
       slist=c.query(ad_type=htcondor.htcondor.AdTypes.Startd,projection=full_projection,
-                    constraint='ProvisionedNamespace=?="%s"'%self.namespace)
+                    constraint='K8SNamespace=?="%s"'%self.namespace)
       for s in slist:
          try:
             sname=s['Name']

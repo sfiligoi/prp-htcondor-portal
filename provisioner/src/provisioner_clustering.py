@@ -45,14 +45,7 @@ class ProvisionerClusteringAttributes:
         attrs.append(self.expand_schedd_attr(k))
       return attrs
 
-   def expand_startd_attr(self, attr):
-      return "Provisioned%s"%attr
-
-   def get_startd_attributes(self):
-      attrs=[]
-      for k in self.attributes.keys():
-        attrs.append(self.expand_startd_attr(k))
-      return attrs
+   # Note: The startd attributes have no prefix
 
    def expand_k8s_attr(self, attr):
       return "Pod%s"%attr
