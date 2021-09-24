@@ -107,7 +107,7 @@ class ProvisionerK8SCluster(ProvisionerCluster):
               state = "None"
             if state!="Claimed":
               cnt+=1
-         elif phase not in ("Succeeded", "Failed"):
+         elif phase!="Succeeded":
             # Assume any other state is legitimate
             cnt+=1
       return cnt
