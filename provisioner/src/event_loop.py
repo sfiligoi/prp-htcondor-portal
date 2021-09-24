@@ -47,9 +47,10 @@ class ProvisionerEventLoop:
                self._provision_cluster(ckey, schedd_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
             else:
                # we have k8s cluster, but no condor jobs
+               self.log_obj.log_debug("[ProvisionerEventLoop] Unhandled k8s cluster '%s' found"%ckey)
                pass # noop for now, may eventually do something
          except:
-            self.log_obj.log_debug("[ProvisionerEventLoop] Exception in cluster  %s"%ckey)
+            self.log_obj.log_debug("[ProvisionerEventLoop] Exception in cluster '%s'"%ckey)
 
       # explicit cleanup to avoid accidental reuse 
       del all_clusters_set
@@ -62,7 +63,7 @@ class ProvisionerEventLoop:
       "Check if we have enough k8s clusters. Submit more if needed"
       n_jobs_idle = schedd_cluster.count_idle()
       if n_jobs_idle==0:
-         self.log_obj.log_debug("[ProvisionerEventLoop] Cluster %s n_jobs_idle==0 found!"%cluster_id)
+         self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle==0 found!"%cluster_id)
          return # should never get in here, but just in case (nothing to do, we are done)
 
       # assume some latency and pod reuse
@@ -75,7 +76,7 @@ class ProvisionerEventLoop:
          min_pods = self.max_pods_per_cluster
 
       n_pods_unclaimed = k8s_cluster.count_unclaimed() if k8s_cluster!=None else 0
-      self.log_obj.log_debug("[ProvisionerEventLoop] Cluster %s n_jobs_idle %i n_pods_unclaimed %i min_pods %i"%
+      self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i"%
                              (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods))
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
@@ -83,10 +84,10 @@ class ProvisionerEventLoop:
       else:
          try:
             job_name = self.k8s.submit(schedd_cluster.get_attr_dict(), min_pods-n_pods_unclaimed)
-            self.log_obj.log_info("[ProvisionerEventLoop] Cluster %s Submitted %i pods as job %s"% 
+            self.log_obj.log_info("[ProvisionerEventLoop] Cluster '%s' Submitted %i pods as job %s"% 
                                   (cluster_id,min_pods-n_pods_unclaimed, job_name))
          except:
-            self.log_obj.log_error("[ProvisionerEventLoop] Cluster %s Failed to submit %i pods"%
+            self.log_obj.log_error("[ProvisionerEventLoop] Cluster '%s' Failed to submit %i pods"%
                                    (cluster_id,min_pods-n_pods_unclaimed))
 
       return
