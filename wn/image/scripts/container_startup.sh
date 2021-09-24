@@ -20,6 +20,7 @@ add_values_to () {
 
 full_num_cpus="${NUM_CPUS:-1}"
 full_memory="${MEMORY:-1024}"
+full_disk="${DISK:-100000}"
 full_num_gpus="${NUM_GPUS:-0}"
 
 # Create a config file from the environment.
@@ -28,12 +29,21 @@ full_num_gpus="${NUM_GPUS:-0}"
 echo "# This file was created by $prog" > /etc/condor/config.d/01-env.conf
 add_values_to 01-env.conf \
     CONDOR_HOST "${CONDOR_SERVICE_HOST:-${CONDOR_HOST:-\$(FULL_HOSTNAME)}}" \
+    USE_POOL_PASSWORD "${USE_POOL_PASSWORD:-no}" \
     NUM_CPUS "${full_num_cpus}" \
     MEMORY "${full_memory}" \
-    RESERVED_DISK "${RESERVED_DISK:-1024}" \
-    USE_POOL_PASSWORD "${USE_POOL_PASSWORD:-no}"
+    DISK "${full_disk}"
+
+# single slot using all the requested resources
+echo "NUM_SLOTS_TYPE_1 = 1" >> /etc/condor/config.d/01-env.conf
 if [ "x${full_num_gpus}" != "x0" ]; then
+   # we cannot really set the number of GPUs, just enable auto-detect
    echo "use feature : GPUs" >> /etc/condor/config.d/01-env.conf
+   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=${full_disk},swap=auto,gpu=${full_num_gpus}" \
+      >> /etc/condor/config.d/01-env.conf
+else
+   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=${full_disk},swap=auto" \
+      >> /etc/condor/config.d/01-env.conf
 fi
 
 

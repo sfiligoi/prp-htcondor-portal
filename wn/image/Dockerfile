@@ -36,8 +36,8 @@ RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
 
 #
 # Accepts env variables
-# CONDOR_HOST RESERVED_DISK STARTD_NOCLAIM_SHUTDOWN
-# NUM_CPUS MEMORY NUM_GPUS
+# CONDOR_HOST STARTD_NOCLAIM_SHUTDOWN
+# NUM_CPUS MEMORY DISK NUM_GPUS
 # K8S_NAMESPACE
 #
 
