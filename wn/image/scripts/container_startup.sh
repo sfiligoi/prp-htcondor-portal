@@ -39,10 +39,10 @@ echo "NUM_SLOTS_TYPE_1 = 1" >> /etc/condor/config.d/01-env.conf
 if [ "x${full_num_gpus}" != "x0" ]; then
    # we cannot really set the number of GPUs, just enable auto-detect
    echo "use feature : GPUs" >> /etc/condor/config.d/01-env.conf
-   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=${full_disk},swap=auto,gpu=${full_num_gpus}" \
+   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=auto,swap=auto,gpu=${full_num_gpus}" \
       >> /etc/condor/config.d/01-env.conf
 else
-   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=${full_disk},swap=auto" \
+   echo "SLOT_TYPE_1 = cpu=${full_num_cpus},mem=${full_memory},disk=auto,swap=auto" \
       >> /etc/condor/config.d/01-env.conf
 fi
 
