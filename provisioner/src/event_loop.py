@@ -17,12 +17,14 @@ class ProvisionerEventLoop:
       self.max_pods_per_cluster = max_pods_per_cluster
 
    def one_iteration(self):
+      schedd_attrs = provisioner_clustering.ProvisionerClusteringAttributes().get_schedd_attributes()
       try:
-         schedd_jobs = self.schedd.query_idle()
+         schedd_jobs = self.schedd.query_idle(projection=schedd_attrs)
          startd_pods = self.collector.query()
       except:
          self.log_obj.log_error("[ProvisionerEventLoop] Failed to query HTCondor")
          return
+      del schedd_attrs
 
       try:
          k8s_pods = self.k8s.query()

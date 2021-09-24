@@ -52,7 +52,8 @@ class ProvisionerSchedd:
          jobattrs={'ScheddName':schedd_name}
          for k in job.keys():
             # convert all values to strings, for easier management
-            jobattrs[k]="%s"%job[k]
+            # also expand all expresstions
+            jobattrs[k]="%s"%job.eval(k)
          jobs.append(jobattrs)
       return
 
@@ -125,7 +126,8 @@ class ProvisionerCollector:
          adattrs={}
          for k in s.keys():
             # convert all values to strings, for easier management
-            adattrs[k]="%s"%s[k]
+            # also eval any expressions
+            adattrs[k]="%s"%s.eval(k)
          startds.append(adattrs)
          # cleaup to avoid accidental reuse
          del sname
