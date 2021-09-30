@@ -14,7 +14,9 @@ import time
 class ProvisionerK8S:
    """Kubernetes Query interface"""
 
-   def __init__(self, namespace, condor_host = "prp-cm-htcondor.htcondor-portal.svc.cluster.local"):
+   def __init__(self, namespace,
+                condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
+                k8s_image='sfiligoi/prp-portal-wn'):
       """
       Arguments:
          namespace: string
@@ -22,6 +24,7 @@ class ProvisionerK8S:
       """
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = condor_host
+      self.k8s_image = k8s_image
       self.start_time = int(time.time())
       self.submitted = 0
 
@@ -96,7 +99,7 @@ class ProvisionerK8S:
                   'restartPolicy': 'Never',
                   'containers': [{
                      'name': 'htcondor',
-                     'image': 'sfiligoi/prp-portal-wn',
+                     'image': self.k8s_image,
                      'env': env,
                      'resources': {
                         'limits': req,
