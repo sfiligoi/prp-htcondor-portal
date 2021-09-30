@@ -157,11 +157,11 @@ class ProvisionerK8S:
       return
 
    def _augment_environment(self, env_list):
-      ""Add any additional (value, key) pairs to the list"""
+      """Add any additional (value, key) pairs to the list"""
       return
 
    def _augment_volumes(self, volumes):
-      ""Add any additional (volume,mount) pairs to the list"""
+      """Add any additional (volume,mount) pairs to the list"""
 
       # by default, we mount the token secret
       volumes.append(({
