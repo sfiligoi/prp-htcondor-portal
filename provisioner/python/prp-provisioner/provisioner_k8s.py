@@ -65,17 +65,34 @@ class ProvisionerK8S:
                  'PodGPUs':   "%i"%int_vals['GPUs'],
                  'PodMemory': "%i"%int_vals['Memory']
                }
+      self._augment_labels(labels)
+
       req = {
                'memory':  '%iMi'%int_vals['Memory'],
                'cpu':            int_vals['CPUs'],
                'nvidia.com/gpu': int_vals['GPUs']
             }
-      env = [{'name': 'CONDOR_HOST', 'value': self.condor_host},
-             {'name': 'STARTD_NOCLAIM_SHUTDOWN', 'value': '1200'},
-             {'name': 'K8S_NAMESPACE', 'value': self.namespace},
-             {'name': 'NUM_CPUS', 'value': "%i"%int_vals['CPUs']},
-             {'name': 'NUM_GPUS', 'value': "%i"%int_vals['GPUs']},
-             {'name': 'MEMORY',   'value': "%i"%int_vals['Memory']}]
+      env_list = [ ('CONDOR_HOST', self.condor_host),
+                   ('STARTD_NOCLAIM_SHUTDOWN', '1200'),
+                   ('K8S_NAMESPACE', self.namespace),
+                   ('NUM_CPUS', "%i"%int_vals['CPUs']),
+                   ('NUM_GPUS', "%i"%int_vals['GPUs']),
+                   ('MEMORY',   "%i"%int_vals['Memory'])]
+      self._augment_environment(env_list)
+
+      # bosy will need it in list/dict form
+      env = []
+      for el in env_list:
+         env.append({'name': el[0], 'value': el[1]})
+
+      volumes_list = []
+      self._augment_volumes(volumes_list)
+
+      pod_volumes = []
+      mounts = []
+      for el in volumes_list:
+         pod_volumes.append(el[0])
+         mounts.append(el[1])
 
       job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
       self.submitted = self.submitted + 1
@@ -105,24 +122,9 @@ class ProvisionerK8S:
                         'limits': req,
                         'requests': req
                      },
-                     'volumeMounts': [{
-                        'name': 'configpasswd',
-                        'mountPath': '/etc/condor/tokens.d/prp-wn.token',
-                        'subPath': 'prp-wn.token',
-                        'readOnly': True
-                      }]
+                     'volumeMounts': mounts,
                   }],
-                  'volumes': [{
-                     'name': 'configpasswd',
-                     'secret': {
-                        'secretName': 'prp-htcondor-wn-secret',
-                        'items': [{
-                           'key': 'prp-wn.token',
-                           'path': 'prp-wn.token',
-                           'defaultMode': 256
-                        }]
-                     }
-                  }]
+                  'volumes': pod_volumes
                }
             }
          }
@@ -147,5 +149,38 @@ class ProvisionerK8S:
          podattrs['Name'] = pod.metadata.name
          podattrs['Phase'] = pod.status.phase
          pods.append(podattrs)
+      return
+
+   # These can be re-implemented by derivative classes
+   def _augment_labels(self, labels):
+      """Add any additional labels to the dictionary"""
+      return
+
+   def _augment_environment(self, env_list):
+      ""Add any additional (value, key) pairs to the list"""
+      return
+
+   def _augment_volumes(self, volumes):
+      ""Add any additional (volume,mount) pairs to the list"""
+
+      # by default, we mount the token secret
+      volumes.append(({
+                         'name': 'configpasswd',
+                         'secret': {
+                            'secretName': 'prp-htcondor-wn-secret',
+                            'items': [{
+                               'key': 'prp-wn.token',
+                               'path': 'prp-wn.token',
+                               'defaultMode': 256
+                            }]
+                         }
+                      },
+                      {
+                         'name': 'configpasswd',
+                         'mountPath': '/etc/condor/tokens.d/prp-wn.token',
+                         'subPath': 'prp-wn.token',
+                         'readOnly': True
+                      }))
+
       return
 
