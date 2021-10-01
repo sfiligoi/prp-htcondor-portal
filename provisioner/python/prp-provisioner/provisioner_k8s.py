@@ -91,8 +91,16 @@ class ProvisionerK8S:
       pod_volumes = []
       mounts = []
       for el in volumes_list:
-         pod_volumes.append(el[0])
-         mounts.append(el[1])
+         el_new = copy.copy(el[1])
+         el_new['name']=el[0]
+         pod_volumes.append(el_new)
+
+         el_new = copy.copy(el[2])
+         el_new['name']=el[0]
+         mounts.append(el_new)
+
+         # avoid accidental reuse
+         del el_new
 
       job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
       self.submitted = self.submitted + 1
@@ -161,11 +169,11 @@ class ProvisionerK8S:
       return
 
    def _augment_volumes(self, volumes):
-      """Add any additional (volume,mount) pairs to the list"""
+      """Add any additional (name,volume,mount) tuple to the list"""
 
       # by default, we mount the token secret
-      volumes.append(({
-                         'name': 'configpasswd',
+      volumes.append(('configpasswd',
+                      {
                          'secret': {
                             'secretName': 'prp-htcondor-wn-secret',
                             'items': [{
@@ -176,7 +184,6 @@ class ProvisionerK8S:
                          }
                       },
                       {
-                         'name': 'configpasswd',
                          'mountPath': '/etc/condor/tokens.d/prp-wn.token',
                          'subPath': 'prp-wn.token',
                          'readOnly': True
