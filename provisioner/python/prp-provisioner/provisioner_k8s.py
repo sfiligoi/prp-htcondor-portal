@@ -17,9 +17,11 @@ class ProvisionerK8S:
    def __init__(self, namespace,
                 condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
                 k8s_image='sfiligoi/prp-portal-wn',
+                priority_class = None,
                 additional_labels = {},
-                additional_envs = []
-                additional_volumes = {}):
+                additional_envs = [],
+                additional_volumes = {},
+                additional_tolerations = []):
       """
       Arguments:
          namespace: string
@@ -28,12 +30,16 @@ class ProvisionerK8S:
              DNS address of the HTCOndor collector
          k8s_image: string (Optional)
              WN Container image to use in the pod
+         priority_class: string (Optional)
+             priorityClassName to associate with the pod
          additional_labels: dictionary of strings (Optional)
              Labels to attach to the pod
          additional_envs: list of (name,value) pairs (Optional)
-             Evioronment value to add to the container
+             Environment values to add to the container
          additional_volumes: dictionary of (volume,mount) pairs (Optional)
              Volumes to mount in the pod. Both volume and mount must be a dictionary.
+         additional_tolerations: list of dictionaries (Optional)
+             Tolerations to add to the container
       """
       self.start_time = int(time.time())
       self.submitted = 0
@@ -41,9 +47,11 @@ class ProvisionerK8S:
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = copy.deepcopy(condor_host)
       self.k8s_image = copy.deepcopy(k8s_image)
+      self.priority_class = copy.deepcopy(priority_class)
       self.additional_labels = copy.deepcopy(additional_labels)
       self.additional_envs = copy.deepcopy(additional_envs)
       self.additional_volumes = copy.deepcopy(additional_volumes)
+      self.additional_tolerations = copy.deepcopy(additional_tolerations)
 
    def authenticate(self, use_service_account=True):
       """Load credentials needed for authentication"""
@@ -124,6 +132,13 @@ class ProvisionerK8S:
          # avoid accidental reuse
          del el_new
 
+      # no other defaults, so just start with the additional ones
+      tolerations = self.deepcopy(self.additional_tolerations)
+      self.augment_tolerations(tolerations, attrs)
+
+      k8s_image = self._get_k8s_image(attrs)
+      priority_class = self._get_priority_class(attrs)
+
       job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
       self.submitted = self.submitted + 1
 
@@ -144,9 +159,10 @@ class ProvisionerK8S:
                },
                'spec': {
                   'restartPolicy': 'Never',
+                  'tolerations' : tolerations,
                   'containers': [{
                      'name': 'htcondor',
-                     'image': self.k8s_image,
+                     'image': k8s_image,
                      'env': env,
                      'resources': {
                         'limits': req,
@@ -159,6 +175,9 @@ class ProvisionerK8S:
             }
          }
       }
+
+      if priority_class!=None:
+         body['spec']['template']['spec']['priorityClassName'] = priority_class
 
       k8s = kubernetes.client.BatchV1Api()
       k8s.create_namespaced_job(body=body, namespace=self.namespace)
@@ -182,6 +201,12 @@ class ProvisionerK8S:
       return
 
    # These can be re-implemented by derivative classes
+   def _get_k8s_image(self, attrs):
+      return self.k8s_image
+
+   def _get_priority_class(self, attrs):
+      return self.priority_class
+
    def _augment_labels(self, labels, attrs):
       """Add any additional labels to the dictionary (attrs is read-only)"""
       return
@@ -214,4 +239,9 @@ class ProvisionerK8S:
                    )
 
       return
+
+   def _augment_tolerations(self, t_list, attrs):
+      """Add any additional dictionaries to the list (attrs is read-only)"""
+      return
+
 
