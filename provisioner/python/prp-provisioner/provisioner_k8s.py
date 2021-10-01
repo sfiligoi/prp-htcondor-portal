@@ -16,17 +16,34 @@ class ProvisionerK8S:
 
    def __init__(self, namespace,
                 condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
-                k8s_image='sfiligoi/prp-portal-wn'):
+                k8s_image='sfiligoi/prp-portal-wn',
+                additional_labels = {},
+                additional_envs = []
+                additional_volumes = {}):
       """
       Arguments:
          namespace: string
              Monitored namespace
+         condor_host: string (Optional)
+             DNS address of the HTCOndor collector
+         k8s_image: string (Optional)
+             WN Container image to use in the pod
+         additional_labels: dictionary of strings (Optional)
+             Labels to attach to the pod
+         additional_envs: list of (name,value) pairs (Optional)
+             Evioronment value to add to the container
+         additional_volumes: dictionary of (volume,mount) pairs (Optional)
+             Volumes to mount in the pod. Both volume and mount must be a dictionary.
       """
-      self.namespace = copy.deepcopy(namespace)
-      self.condor_host = condor_host
-      self.k8s_image = k8s_image
       self.start_time = int(time.time())
       self.submitted = 0
+      # use deepcopy to avoid surprising changes at runtime
+      self.namespace = copy.deepcopy(namespace)
+      self.condor_host = copy.deepcopy(condor_host)
+      self.k8s_image = copy.deepcopy(k8s_image)
+      self.additional_labels = copy.deepcopy(additional_labels)
+      self.additional_envs = copy.deepcopy(additional_envs)
+      self.additional_volumes = copy.deepcopy(additional_volumes)
 
    def authenticate(self, use_service_account=True):
       """Load credentials needed for authentication"""
@@ -65,7 +82,9 @@ class ProvisionerK8S:
                  'PodGPUs':   "%i"%int_vals['GPUs'],
                  'PodMemory': "%i"%int_vals['Memory']
                }
-      self._augment_labels(labels)
+      for k in self.additional_labels.keys():
+         labels[k] = copy.copy(self.additional_labels[k])
+      self._augment_labels(labels, attrs)
 
       req = {
                'memory':  '%iMi'%int_vals['Memory'],
@@ -77,26 +96,29 @@ class ProvisionerK8S:
                    ('K8S_NAMESPACE', self.namespace),
                    ('NUM_CPUS', "%i"%int_vals['CPUs']),
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
-                   ('MEMORY',   "%i"%int_vals['Memory'])]
-      self._augment_environment(env_list)
+                   ('MEMORY',   "%i"%int_vals['Memory'])] +
+                 self.additional_envs
+      self._augment_environment(env_list, attrs)
 
       # bosy will need it in list/dict form
       env = []
       for el in env_list:
          env.append({'name': el[0], 'value': el[1]})
 
-      volumes_list = []
-      self._augment_volumes(volumes_list)
+      # no other defaults, so just start with the additional ones
+      volumes_raw = copy.deepcopy(self.additional_volumes)
+      self._augment_volumes(volumes_raw, attrs)
 
       pod_volumes = []
       mounts = []
-      for el in volumes_list:
-         el_new = copy.copy(el[1])
-         el_new['name']=el[0]
+      for k in volumes_raw.keys():
+         el = volumes_raw[k]
+         el_new = copy.copy(el[0])
+         el_new['name']=k
          pod_volumes.append(el_new)
 
-         el_new = copy.copy(el[2])
-         el_new['name']=el[0]
+         el_new = copy.copy(el[1])
+         el_new['name']=k
          mounts.append(el_new)
 
          # avoid accidental reuse
@@ -160,19 +182,20 @@ class ProvisionerK8S:
       return
 
    # These can be re-implemented by derivative classes
-   def _augment_labels(self, labels):
-      """Add any additional labels to the dictionary"""
+   def _augment_labels(self, labels, attrs):
+      """Add any additional labels to the dictionary (attrs is read-only)"""
       return
 
-   def _augment_environment(self, env_list):
-      """Add any additional (value, key) pairs to the list"""
+   def _augment_environment(self, env_list, attrs):
+      """Add any additional (name,value) pairs to the list (attrs is read-only)"""
       return
 
-   def _augment_volumes(self, volumes):
-      """Add any additional (name,volume,mount) tuple to the list"""
+   def _augment_volumes(self, volumes, attrs):
+      """Add any additional (volume,mount) pair to the dictionary (attrs is read-only)"""
 
       # by default, we mount the token secret
-      volumes.append(('configpasswd',
+      volumes['configpasswd'] =
+                   (
                       {
                          'secret': {
                             'secretName': 'prp-htcondor-wn-secret',
@@ -187,7 +210,8 @@ class ProvisionerK8S:
                          'mountPath': '/etc/condor/tokens.d/prp-wn.token',
                          'subPath': 'prp-wn.token',
                          'readOnly': True
-                      }))
+                      }
+                   )
 
       return
 
