@@ -21,7 +21,8 @@ class ProvisionerK8S:
                 additional_labels = {},
                 additional_envs = [],
                 additional_volumes = {},
-                additional_tolerations = []):
+                additional_tolerations = [],
+                additional_node_selectors = {}):
       """
       Arguments:
          namespace: string
@@ -40,6 +41,8 @@ class ProvisionerK8S:
              Volumes to mount in the pod. Both volume and mount must be a dictionary.
          additional_tolerations: list of dictionaries (Optional)
              Tolerations to add to the container
+         additional_node_selectors: dictionary of strings (Optional)
+             nodeSelectors to attach to the pod
       """
       self.start_time = int(time.time())
       self.submitted = 0
@@ -52,6 +55,8 @@ class ProvisionerK8S:
       self.additional_envs = copy.deepcopy(additional_envs)
       self.additional_volumes = copy.deepcopy(additional_volumes)
       self.additional_tolerations = copy.deepcopy(additional_tolerations)
+      self.additional_node_selectors = additional_node_selectors
+      return
 
    def authenticate(self, use_service_account=True):
       """Load credentials needed for authentication"""
@@ -134,7 +139,11 @@ class ProvisionerK8S:
 
       # no other defaults, so just start with the additional ones
       tolerations = self.deepcopy(self.additional_tolerations)
-      self.augment_tolerations(tolerations, attrs)
+      self._augment_tolerations(tolerations, attrs)
+
+      # no other defaults, so just start with the additional ones
+      node_selectors = self.deepcopy(self.additional_node_selectors)
+      self._augment_node_selectors(node_selectors, attrs)
 
       k8s_image = self._get_k8s_image(attrs)
       priority_class = self._get_priority_class(attrs)
@@ -160,6 +169,7 @@ class ProvisionerK8S:
                'spec': {
                   'restartPolicy': 'Never',
                   'tolerations' : tolerations,
+                  'nodeSelectors' : node_selectors,
                   'containers': [{
                      'name': 'htcondor',
                      'image': k8s_image,
@@ -244,4 +254,7 @@ class ProvisionerK8S:
       """Add any additional dictionaries to the list (attrs is read-only)"""
       return
 
+   def _augment_node_selectors(self, node_selectors, attrs):
+      """Add any additional elements to the dictionary (attrs is read-only)"""
+      return
 
