@@ -104,7 +104,7 @@ class ProvisionerK8S:
                    ('K8S_NAMESPACE', self.namespace),
                    ('NUM_CPUS', "%i"%int_vals['CPUs']),
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
-                   ('MEMORY',   "%i"%int_vals['Memory'])] +
+                   ('MEMORY',   "%i"%int_vals['Memory'])] + \
                  self.additional_envs
       self._augment_environment(env_list, attrs)
 
@@ -219,7 +219,7 @@ class ProvisionerK8S:
       """Add any additional (volume,mount) pair to the dictionary (attrs is read-only)"""
 
       # by default, we mount the token secret
-      volumes['configpasswd'] =
+      volumes['configpasswd'] = \
                    (
                       {
                          'secret': {
