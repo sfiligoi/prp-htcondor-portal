@@ -138,11 +138,11 @@ class ProvisionerK8S:
          del el_new
 
       # no other defaults, so just start with the additional ones
-      tolerations = self.deepcopy(self.additional_tolerations)
+      tolerations = copy.deepcopy(self.additional_tolerations)
       self._augment_tolerations(tolerations, attrs)
 
       # no other defaults, so just start with the additional ones
-      node_selectors = self.deepcopy(self.additional_node_selectors)
+      node_selectors = copy.deepcopy(self.additional_node_selectors)
       self._augment_node_selectors(node_selectors, attrs)
 
       k8s_image = self._get_k8s_image(attrs)
