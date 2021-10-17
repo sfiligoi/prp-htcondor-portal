@@ -83,8 +83,8 @@ done
 [[ -s /etc/condor/config.d/01-fdfix.conf ]] && \
     echo "# This file was created by $prog" >> /etc/condor/config.d/01-fdfix.conf
 
-# The master will crash if run as pid 1 (bug?) plus supervisor can restart
-# it if it dies, and gives us the ability to run other services.
+# Allow the derived images to run any additional runtime customizations
+for x in /etc/constainer_startup/image-config.d/*.sh; do source "$x"; done
 
 if [[ -f /root/config/pre-exec.sh ]]; then
     bash -x /root/config/pre-exec.sh
