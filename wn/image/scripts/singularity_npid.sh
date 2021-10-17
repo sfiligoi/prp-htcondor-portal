@@ -51,5 +51,5 @@ do
     fi
 done
 
-exec singularity "${options[@]}"
+exec /usr/bin/singularity.org "${options[@]}"
 

@@ -23,9 +23,10 @@ RUN yum install -y clinfo && \
 # Condor does not pick up the system libraries
 ADD profile.d/cudalib.sh /etc/profile.d/
 
-# Root-less singularity
+# Tweaked singularity for container environments
+# Remove default singularity from path, too
 ADD scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
-
+RUN mv /usr/bin/singularity /usr/bin/singularity.org
 
 ADD condor.d/* /etc/condor/config.d/
 
