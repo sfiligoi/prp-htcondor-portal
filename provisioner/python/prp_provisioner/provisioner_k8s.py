@@ -1,9 +1,9 @@
 #
 # prp-htcondor-portal/provisioner
 #
-# BSD license, copyright Igor Sfiligoi 2021
+# BSD license, copyright Igor Sfiligoi@UCSD 2021
 #
-# Implement the htcondor interface
+# Implement the Kubernetes interface
 #
 
 import copy
