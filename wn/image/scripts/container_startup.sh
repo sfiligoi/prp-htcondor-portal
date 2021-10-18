@@ -90,5 +90,18 @@ if [[ -f /root/config/pre-exec.sh ]]; then
     bash -x /root/config/pre-exec.sh
 fi
 
-# we want to live only as long as htcoondor is alive
-exec /usr/sbin/condor_master -f
+
+trap 'echo signal received!; kill $(jobs -p); wait' SIGINT SIGTERM
+
+# we want to live only as long as htcondor is alive
+echo "`date` Starting condor_master"
+/usr/sbin/condor_master -f&
+
+wait
+rc=$?
+echo "`date` End of condor_master, rc=${rc}"
+
+echo "tail /var/log/condor/MasterLog"
+tail -100 /var/log/condor/MasterLog
+
+exit ${rc}
