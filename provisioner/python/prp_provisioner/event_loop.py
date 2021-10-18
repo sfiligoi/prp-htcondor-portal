@@ -6,7 +6,7 @@
 # Implement the event loop
 #
 
-import provisioner_clustering
+from . import provisioner_clustering
 
 class ProvisionerEventLoop:
    def __init__(self, log_obj, schedd_obj, collector_obj, k8s_obj, max_pods_per_cluster):

@@ -9,10 +9,10 @@
 import sys
 import time
 
-import provisioner_logging
-import provisioner_htcondor
-import provisioner_k8s
-import event_loop
+from . import provisioner_logging
+from . import provisioner_htcondor
+from . import provisioner_k8s
+from . import event_loop
 
 def main(namespace, max_pods_per_cluster=10, sleep_time=10):
    log_obj = provisioner_logging.ProvisionerStdoutLogging(want_log_debug=True)
