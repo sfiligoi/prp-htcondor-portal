@@ -19,6 +19,7 @@ class ProvisionerK8S:
                 k8s_image='sfiligoi/prp-portal-wn',
                 k8s_image_pull_policy='Always',
                 priority_class = None,
+                base_tolerations = [],
                 additional_labels = {},
                 additional_envs = [],
                 additional_volumes = {},
@@ -36,6 +37,8 @@ class ProvisionerK8S:
              WN Container image pull policy
          priority_class: string (Optional)
              priorityClassName to associate with the pod
+         base_tolerations: list of strings (Optional)
+             Tolerations of the form NoSchedule/Exists to add to the container
          additional_labels: dictionary of strings (Optional)
              Labels to attach to the pod
          additional_envs: list of (name,value) pairs (Optional)
@@ -56,6 +59,7 @@ class ProvisionerK8S:
       self.k8s_image = copy.deepcopy(k8s_image)
       self.k8s_image_pull_policy = copy.deepcopy(k8s_image_pull_policy)
       self.priority_class = copy.deepcopy(priority_class)
+      self.base_tolerations = copy.deepcopy(base_tolerations)
       self.additional_labels = copy.deepcopy(additional_labels)
       self.additional_envs = copy.deepcopy(additional_envs)
       self.additional_volumes = copy.deepcopy(additional_volumes)
@@ -258,6 +262,11 @@ class ProvisionerK8S:
 
    def _augment_tolerations(self, t_list, attrs):
       """Add any additional dictionaries to the list (attrs is read-only)"""
+      for t in self.base_tolerations:
+         t_list.append({'effect': 'NoSchedule',
+                        'key': t,
+                        'operator': 'Exists'})
+
       return
 
    def _augment_node_selectors(self, node_selectors, attrs):
