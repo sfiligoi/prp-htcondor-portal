@@ -39,7 +39,7 @@ class ProvisionerSchedd:
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         myjobs=s.xquery(constraint='(JobStatus=?=%i)&&(RequestK8SNamespace=?="%s")'%(job_status,self.namespace), projection=full_projection)
+         myjobs=s.xquery('(JobStatus=?=%i)&&(RequestK8SNamespace=?="%s")'%(job_status,self.namespace), full_projection)
          self._append_jobs(sclassad['Name'], jobs, myjobs)
 
       return jobs
@@ -70,7 +70,7 @@ class ProvisionerSchedd:
    def _get_schedd_objs(self):
       sobjs=[]
       c = htcondor.Collector()
-      slist=c.query(ad_type=htcondor.htcondor.AdTypes.Schedd,projection=['Name','AuthenticatedIdentity','MyAddress','AddressV1','Machine'])
+      slist=c.query(ad_type=htcondor.AdTypes.Schedd,projection=['Name','AuthenticatedIdentity','MyAddress','AddressV1','Machine'])
       for s in slist:
          try:
             sname=s['Name']
@@ -121,7 +121,7 @@ class ProvisionerCollector:
       startds=[]
 
       c = htcondor.Collector()
-      slist=c.query(ad_type=htcondor.htcondor.AdTypes.Startd,projection=full_projection,
+      slist=c.query(ad_type=htcondor.AdTypes.Startd,projection=full_projection,
                     constraint='K8SNamespace=?="%s"'%self.namespace)
       for s in slist:
          try:
