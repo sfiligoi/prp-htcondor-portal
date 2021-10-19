@@ -178,7 +178,7 @@ class ProvisionerK8S:
                'spec': {
                   'restartPolicy': 'Never',
                   'tolerations' : tolerations,
-                  'nodeSelectors' : node_selectors,
+                  'nodeSelector' : node_selectors,
                   'containers': [{
                      'name': 'htcondor',
                      'image': k8s_image,
