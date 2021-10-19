@@ -48,6 +48,7 @@ class ProvisionerK8S:
              nodeSelectors to attach to the pod
       """
       self.start_time = int(time.time())
+      self.app_name = 'prp-wn'
       self.submitted = 0
       # use deepcopy to avoid surprising changes at runtime
       self.namespace = copy.deepcopy(namespace)
@@ -93,7 +94,7 @@ class ProvisionerK8S:
          int_vals[k] = int(attrs[k])
 
       labels = {
-                 'k8s-app': 'prp-wn',
+                 'k8s-app': self.app_name,
                  'prp-htcondor-portal': 'wn',
                  'PodCPUs':   "%i"%int_vals['CPUs'],
                  'PodGPUs':   "%i"%int_vals['GPUs'],
@@ -152,7 +153,7 @@ class ProvisionerK8S:
       k8s_image,k8s_image_pull_policy = self._get_k8s_image(attrs)
       priority_class = self._get_priority_class(attrs)
 
-      job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
+      job_name = '%s-%x-%03x'%(self.app_name,self.start_time,self.submitted)
       self.submitted = self.submitted + 1
 
       body = {
