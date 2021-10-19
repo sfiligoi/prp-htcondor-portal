@@ -17,6 +17,7 @@ class ProvisionerK8S:
    def __init__(self, namespace,
                 condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
                 k8s_image='sfiligoi/prp-portal-wn',
+                k8s_image_pull_policy='Always',
                 priority_class = None,
                 additional_labels = {},
                 additional_envs = [],
@@ -31,6 +32,8 @@ class ProvisionerK8S:
              DNS address of the HTCOndor collector
          k8s_image: string (Optional)
              WN Container image to use in the pod
+         k8s_image_pull_policy: string (Optional)
+             WN Container image pull policy
          priority_class: string (Optional)
              priorityClassName to associate with the pod
          additional_labels: dictionary of strings (Optional)
@@ -50,6 +53,7 @@ class ProvisionerK8S:
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = copy.deepcopy(condor_host)
       self.k8s_image = copy.deepcopy(k8s_image)
+      self.k8s_image_pull_policy = copy.deepcopy(k8s_image_pull_policy)
       self.priority_class = copy.deepcopy(priority_class)
       self.additional_labels = copy.deepcopy(additional_labels)
       self.additional_envs = copy.deepcopy(additional_envs)
@@ -145,7 +149,7 @@ class ProvisionerK8S:
       node_selectors = copy.deepcopy(self.additional_node_selectors)
       self._augment_node_selectors(node_selectors, attrs)
 
-      k8s_image = self._get_k8s_image(attrs)
+      k8s_image,k8s_image_pull_policy = self._get_k8s_image(attrs)
       priority_class = self._get_priority_class(attrs)
 
       job_name = 'prp-wn-%x-%03x'%(self.start_time,self.submitted)
@@ -173,6 +177,7 @@ class ProvisionerK8S:
                   'containers': [{
                      'name': 'htcondor',
                      'image': k8s_image,
+                     'imagePullPolicy': k8s_image_pull_policy,
                      'env': env,
                      'resources': {
                         'limits': req,
@@ -212,7 +217,7 @@ class ProvisionerK8S:
 
    # These can be re-implemented by derivative classes
    def _get_k8s_image(self, attrs):
-      return self.k8s_image
+      return (self.k8s_image,self.k8s_image_pull_policy)
 
    def _get_priority_class(self, attrs):
       return self.priority_class
