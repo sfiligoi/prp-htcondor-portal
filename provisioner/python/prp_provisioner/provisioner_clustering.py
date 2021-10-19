@@ -127,8 +127,16 @@ class ProvisionerClustering:
                val = job[jobk]
             else:
                val = self.attrs.attributes[k]
-            job_attrs.append("%s"%val)
+
+            sval="%s"%val
+            if sval=="Undefined":
+               val = self.attrs.attributes[k]
+               sval="%s"%val
+
+            job_attrs.append(sval)
             key_attrs[jobk]=val
+            del sval
+            del val
          job_key=";".join(job_attrs)
          if job_key not in clusters:
             clusters[job_key] = ProvisionerScheddCluster(job_key, job_attrs, key_attrs)
