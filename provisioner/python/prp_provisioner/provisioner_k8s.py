@@ -52,6 +52,7 @@ class ProvisionerK8S:
       """
       self.start_time = int(time.time())
       self.app_name = 'prp-wn'
+      self.k8s_job_ttl = 24 * 3600 # clean after 1 day
       self.submitted = 0
       # use deepcopy to avoid surprising changes at runtime
       self.namespace = copy.deepcopy(namespace)
@@ -171,6 +172,7 @@ class ProvisionerK8S:
          'spec': {
             'parallelism': n_pods,
             'completions': n_pods,
+            'ttlSecondsAfterFinished': self.k8s_job_ttl,
             'template': {
                'metadata': {
                   'labels': labels
