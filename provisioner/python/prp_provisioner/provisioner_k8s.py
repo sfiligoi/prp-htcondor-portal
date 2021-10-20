@@ -157,7 +157,7 @@ class ProvisionerK8S:
       k8s_image,k8s_image_pull_policy = self._get_k8s_image(attrs)
       priority_class = self._get_priority_class(attrs)
 
-      job_name = '%s-%x-%03x'%(self.app_name,self.start_time,self.submitted)
+      job_name = '%s-%x-%06x'%(self.app_name,self.start_time,self.submitted)
       self.submitted = self.submitted + 1
 
       body = {
