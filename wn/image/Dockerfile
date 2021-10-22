@@ -3,8 +3,12 @@ FROM nvidia/cuda:11.2.1-base-centos7
 # OSG RPMs
 RUN yum -y install https://repo.opensciencegrid.org/osg/3.5/osg-3.5-el7-release-latest.rpm && \
     yum -y install epel-release \
-                   yum-plugin-priorities && \
-    yum -y install less which \
+                   yum-plugin-priorities
+
+# need 3.5-upcoming for token support
+RUN sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/osg-upcoming.repo && yum clean all
+
+RUN yum -y install less which \
                    osg-wn-client \
                    redhat-lsb-core && \
     yum -y install singularity && \
