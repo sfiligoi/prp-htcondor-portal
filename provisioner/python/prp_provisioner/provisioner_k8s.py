@@ -95,7 +95,7 @@ class ProvisionerK8S:
    def submit(self, attrs, n_pods=1):
       # first ensure that the basic int values are valid
       int_vals={}
-      for k in ('CPUs','GPUs','Memory'):
+      for k in ('CPUs','GPUs','Memory','Disk'):
          int_vals[k] = int(attrs[k])
 
       labels = {
@@ -103,7 +103,8 @@ class ProvisionerK8S:
                  'prp-htcondor-portal': 'wn',
                  'PodCPUs':   "%i"%int_vals['CPUs'],
                  'PodGPUs':   "%i"%int_vals['GPUs'],
-                 'PodMemory': "%i"%int_vals['Memory']
+                 'PodMemory': "%i"%int_vals['Memory'],
+                 'PodDisk': "%i"%int_vals['Disk']
                }
       for k in self.additional_labels.keys():
          labels[k] = copy.copy(self.additional_labels[k])
@@ -114,12 +115,14 @@ class ProvisionerK8S:
                'cpu':            int_vals['CPUs'],
                'nvidia.com/gpu': int_vals['GPUs']
             }
+      #TODO: Request Ephemeral storage
       env_list = [ ('CONDOR_HOST', self.condor_host),
                    ('STARTD_NOCLAIM_SHUTDOWN', '1200'),
                    ('K8S_NAMESPACE', self.namespace),
                    ('NUM_CPUS', "%i"%int_vals['CPUs']),
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
-                   ('MEMORY',   "%i"%int_vals['Memory'])] + \
+                   ('MEMORY', "%i"%int_vals['Memory']),
+                   ('DISK',   "%i"%int_vals['Disk'])] + \
                  self.additional_envs
       self._augment_environment(env_list, attrs)
 
