@@ -222,6 +222,7 @@ class ProvisionerK8S:
          del labels
          podattrs['Name'] = pod.metadata.name
          podattrs['Phase'] = pod.status.phase
+         podattrs['StartTime'] = pod.status.start_time
          pods.append(podattrs)
       return
 
