@@ -9,6 +9,7 @@
 from collections import OrderedDict
 import copy
 import re
+import datetime
 
 #
 # GPUTypes is a comma-separated list of GPU names
@@ -90,11 +91,16 @@ class ProvisionerScheddCluster(ProvisionerCluster):
       return cnt
 
 class ProvisionerK8SCluster(ProvisionerCluster):
-   def __init__(self, key, attr_vals, pod_attrs):
+   def __init__(self, key, attr_vals, pod_attrs, max_wait_onerror=1000):
       ProvisionerCluster.__init__(self, key, attr_vals)
       self.pod_attrs = pod_attrs
+      self.max_wait_onerror=max_wait_onerror  # in seconds
 
-   def count_unclaimed(self):
+   def count_unclaimed(self, max_wait_onerror=None):
+      if max_wait_onerror==None:
+         max_wait_onerror=self.max_wait_onerror
+
+      err_deadline = datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=max_wait_onerror)
       cnt = 0
       for el in self.elements:
          pod_el = el[0]
@@ -105,11 +111,30 @@ class ProvisionerK8SCluster(ProvisionerCluster):
               state = "%s"%startd_el['State']
             else:
               state = "None"
+            # we will count all Running pods that are not yet claimed
             if state!="Claimed":
               cnt+=1
-         elif phase!="Succeeded":
-            # Assume any other state is legitimate
+         elif phase=="Pending":
+            # we can safely count these at all times
             cnt+=1
+         elif phase=="Succeeded":
+            # we can safely ignore these
+            pass
+         else:
+            # All other states should be transitory
+            # if not, they are problematic and should be ignored
+            err_time = None
+            try:
+               err_time=pod_el['StartTime']
+            except:
+               pass
+            if (err_time==None):
+               # no good estimate, just count
+               cnt+=1
+            elif err_time>err_deadline:
+               # assume it is transitory
+               cnt+=1
+            #else, this is unlikely to recover, ignore
       return cnt
 
 class ProvisionerClustering:
