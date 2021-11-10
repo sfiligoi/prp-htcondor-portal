@@ -29,6 +29,7 @@ def main(namespace, max_pods_per_cluster=10, sleep_time=10):
          el.one_iteration()
       except:
          log_obj.log_debug("[Main] Exception in one_iteration")
+      log_obj.sync()
       time.sleep(sleep_time)
 
 if __name__ == "__main__":

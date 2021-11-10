@@ -23,6 +23,7 @@ class ProvisionerEventLoop:
          startd_pods = self.collector.query()
       except:
          self.log_obj.log_error("[ProvisionerEventLoop] Failed to query HTCondor")
+         self.log_obj.sync()
          return
       del schedd_attrs
 
@@ -30,6 +31,7 @@ class ProvisionerEventLoop:
          k8s_pods = self.k8s.query()
       except:
          self.log_obj.log_error("[ProvisionerEventLoop] Failed to query k8s")
+         self.log_obj.sync()
          return
 
       clustering = provisioner_clustering.ProvisionerClustering()
@@ -56,6 +58,8 @@ class ProvisionerEventLoop:
       del all_clusters_set
       del schedd_clusters
       del k8s_clusters
+
+      self.log_obj.sync()
 
 
    # INTERNAL
