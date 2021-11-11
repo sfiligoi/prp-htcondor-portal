@@ -91,13 +91,20 @@ if [[ -f /root/config/pre-exec.sh ]]; then
 fi
 
 
+# properly cleanup on signal
 trap 'echo signal received!; kill $(jobs -p); wait' SIGINT SIGTERM
+
+# Do not accept more jobs after MASTER_PEACEFUL_SHUTDOWN seconds
+# This way other users/pods get a chance to use these resources
+# (if no-one else is requesting, we will get them back in a new pod)
+mps="${MASTER_PEACEFUL_SHUTDOWN:-7200}"
+(sleep ${mps}; condor_off -master -peaceful; echo "`date` Sending peaceful shutdown") &
 
 # we want to live only as long as htcondor is alive
 echo "`date` Starting condor_master"
 /usr/sbin/condor_master -f&
 
-wait
+wait $!
 rc=$?
 echo "`date` End of condor_master, rc=${rc}"
 
