@@ -24,12 +24,13 @@ RUN yum install -y clinfo && \
     yum clean all
 
 # Suggested RPMs from https://hub.docker.com/r/opensciencegrid/osgvo-el7/dockerfile
+# At least one IceCube job types need freetype
+# attr needed by CVMFS checks
 RUN yum -y groupinstall "Compatibility Libraries" \
                         "Development Tools" \
-                        "Scientific Support"
-
-# At least one IceCube job types need freetype
-RUN yum install -y freetype
+                        "Scientific Support" && \
+    yum install -y freetype && \
+    yum -y install attr && yum clean all
 
 
 # Condor does not pick up the system libraries
