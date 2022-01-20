@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-base-centos7
+FROM nvidia/cuda:11.2-base-centos7
 
 # OSG RPMs
 RUN yum -y install https://repo.opensciencegrid.org/osg/3.5/osg-3.5-el7-release-latest.rpm && \
@@ -11,7 +11,6 @@ RUN sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/osg-upcoming.repo && yum c
 RUN yum -y install less which \
                    osg-wn-client \
                    redhat-lsb-core && \
-    yum -y install singularity && \
     yum -y install condor && \
     yum clean all
 
@@ -24,13 +23,18 @@ RUN mkdir -p /etc/OpenCL/vendors && \
 RUN yum install -y clinfo && \
     yum clean all
 
+# Suggested RPMs from https://hub.docker.com/r/opensciencegrid/osgvo-el7/dockerfile
+RUN yum -y groupinstall "Compatibility Libraries" \
+                        "Development Tools" \
+                        "Scientific Support"
+
+# At least one IceCube job types need freetype
+RUN yum install -y freetype
+
+
 # Condor does not pick up the system libraries
 ADD profile.d/cudalib.sh /etc/profile.d/
 
-# Tweaked singularity for container environments
-# Remove default singularity from path, too
-ADD scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
-RUN mv /usr/bin/singularity /usr/bin/singularity.org
 
 ADD condor.d/* /etc/condor/config.d/
 
