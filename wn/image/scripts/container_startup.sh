@@ -7,6 +7,10 @@
 prog=${0##*/}
 progdir=${0%/*}
 
+if [ -f /usr/sbin/cuda_paths.sh ]; then
+  /usr/sbin/cuda_paths.sh
+fi
+
 fail () {
     echo "$prog:" "$@" >&2
     exit 1

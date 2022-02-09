@@ -38,8 +38,7 @@ ADD condor.d/* /etc/condor/config.d/
 # starting with cuda-11, the binaries and libraries are no in the default paths anymore
 # create the necessary symlinks as a short-term fix
 ADD scripts/cuda_paths.sh /usr/sbin/cuda_paths.sh
-RUN chmod a+rx /usr/sbin/cuda_paths.sh && /usr/sbin/cuda_paths.sh
-
+RUN chmod a+rx /usr/sbin/cuda_paths.sh
 
 ADD scripts/container_startup.sh /usr/sbin/container_startup.sh
 RUN chmod a+rx /usr/sbin/container_startup.sh
