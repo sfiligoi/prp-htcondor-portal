@@ -110,13 +110,13 @@ class ProvisionerK8S:
          labels[k] = copy.copy(self.additional_labels[k])
       self._augment_labels(labels, attrs)
 
-      // CPU is hardly ever used 100%... request 75%
+      # CPU is hardly ever used 100%... request 75%
       req = {
                'memory':  '%iMi'%int_vals['Memory'],
                'cpu':            int_vals['CPUs']*0.75,
                'nvidia.com/gpu': int_vals['GPUs']
             }
-      // but enforce CPU limit
+      # but enforce CPU limit
       lim = {
                'memory':  '%iMi'%int_vals['Memory'],
                'cpu':            int_vals['CPUs'],
