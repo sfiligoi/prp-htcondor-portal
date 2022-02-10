@@ -111,8 +111,9 @@ class ProvisionerK8S:
       self._augment_labels(labels, attrs)
 
       # CPU is hardly ever used 100%... request 75%
+      # Similarly for memry, but request 80% there
       req = {
-               'memory':  '%iMi'%int_vals['Memory'],
+               'memory':  '%iMi'%int(int_vals['Memory']*0.8),
                'cpu':            int_vals['CPUs']*0.75,
                'nvidia.com/gpu': int_vals['GPUs']
             }
