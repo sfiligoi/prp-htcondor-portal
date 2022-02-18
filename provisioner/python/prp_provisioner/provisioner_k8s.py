@@ -14,21 +14,11 @@ import time
 class ProvisionerK8S:
    """Kubernetes Query interface"""
 
-   def __init__(self, namespace,
-                condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
-                k8s_image='sfiligoi/prp-portal-wn',
-                k8s_image_pull_policy='Always',
-                priority_class = None,
-                base_tolerations = [],
-                additional_labels = {},
-                additional_envs = [],
-                additional_volumes = {},
-                additional_tolerations = [],
-                additional_node_selectors = {}):
+   def __init__(self, namespace, config):
       """
-      Arguments:
-         namespace: string
-             Monitored namespace
+      namespace: string
+         Monitored namespace
+      config is a dictionary of:
          condor_host: string (Optional)
              DNS address of the HTCOndor collector
          k8s_image: string (Optional)
@@ -51,21 +41,23 @@ class ProvisionerK8S:
              nodeSelectors to attach to the pod
       """
       self.start_time = int(time.time())
-      self.app_name = 'prp-wn'
-      self.k8s_job_ttl = 24 * 3600 # clean after 1 day
+      self.app_name = config.get('app_name', "prp-wn")
+      self.k8s_job_ttl = int(config.get('k8s_job_ttl', 24 * 3600)) # clean after 1 day
       self.submitted = 0
       # use deepcopy to avoid surprising changes at runtime
       self.namespace = copy.deepcopy(namespace)
-      self.condor_host = copy.deepcopy(condor_host)
-      self.k8s_image = copy.deepcopy(k8s_image)
-      self.k8s_image_pull_policy = copy.deepcopy(k8s_image_pull_policy)
-      self.priority_class = copy.deepcopy(priority_class)
-      self.base_tolerations = copy.deepcopy(base_tolerations)
-      self.additional_labels = copy.deepcopy(additional_labels)
-      self.additional_envs = copy.deepcopy(additional_envs)
-      self.additional_volumes = copy.deepcopy(additional_volumes)
-      self.additional_tolerations = copy.deepcopy(additional_tolerations)
-      self.additional_node_selectors = additional_node_selectors
+      self.condor_host = copy.deepcopy(config.get('condor_host', "prp-cm-htcondor.htcondor-portal.svc.cluster.local")))
+      self.k8s_image = copy.deepcopy(config.get('k8s_image', "sfiligoi/prp-portal-wn")))
+      self.k8s_image_pull_policy = copy.deepcopy(config.get('k8s_image_pull_policy', "Always"))
+      self.priority_class = copy.deepcopy(config.get('priority_class', None))
+      self.priority_class_cpu = copy.deepcopy(config.get('priority_class_cpu', None))
+      self.priority_class_gpu = copy.deepcopy(config.get('priority_class_gpu', None))
+      self.base_tolerations = copy.deepcopy(config.get('base_tolerations', []))
+      self.additional_labels = copy.deepcopy(config.get('additional_labels', {}))
+      self.additional_envs = copy.deepcopy(config.get('additional_envs', []))
+      self.additional_volumes = copy.deepcopy(config.get('additional_volumes', {}))
+      self.additional_tolerations = copy.deepcopy(config.get('additional_tolerations', []))
+      self.additional_node_selectors = copy.deepcopy(config.get('additional_node_selectors', {}))
       return
 
    def authenticate(self, use_service_account=True):
