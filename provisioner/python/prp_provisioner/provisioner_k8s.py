@@ -25,7 +25,7 @@ def parse_dict(dict_str):
    els = dict_str.split(",")
    out = {}
    for el in els:
-     j,v = el.split(":")
+     k,v = el.split(":")
      out[k] = v
    return out
 
