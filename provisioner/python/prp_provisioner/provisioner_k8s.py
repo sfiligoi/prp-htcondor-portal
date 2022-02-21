@@ -11,14 +11,61 @@ import re
 import kubernetes
 import time
 
-class ProvisionerK8S:
-   """Kubernetes Query interface"""
+ProvisionerK8SConfigFields = ('namespace','condor_host',
+                              'k8s_image','k8s_image_pull_policy',
+                              'priority_class','priority_class_cpu','priority_class_gpu',
+                              'tolerations_list', 'node_selectors_dict',
+                              'labels_dict', 'envs_dict', 'pvc_volumes_dict',
+                              'app_name','k8s_job_ttl')
 
-   def __init__(self, namespace, config):
+def parse_list(list_str):
+   return list_str.split(',')
+
+def parse_dict(dict_str):
+   els = dict_str(",")
+   out = {}
+   for el in els:
+     j,v = el.split(":")
+     out[k] = v
+   return out
+
+def update_parse(var, field, ftype,
+                 fields, dict):
+   """Update var if filed in both fields and dice, and parse according to ftype"""
+   if (field in fields) and (field in dict):
+      rval=dict[field]
+      if (ftype=="str"):
+         var = copy.deepcopy(rval)
+      elif (ftype=="int"):
+         var = int(rval)
+      elif (ftype=="list"):
+         var = parse_list(rval)
+      elif (ftype=="dict"):
+         var = parse_dict(rval)
+
+class ProvisionerK8SConfig:
+   """Config fie for ProvisionerK8S"""
+
+   def __init__(self, namespace,
+                condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
+                k8s_image='sfiligoi/prp-portal-wn',
+                k8s_image_pull_policy='Always',
+                priority_class = None,
+                priority_class_cpu = None,
+                priority_class_gpu = None,
+                base_tolerations = [],
+                base_pvc_volumes = {},
+                additional_labels = {},
+                additional_envs = {},
+                additional_volumes = {},
+                additional_tolerations = [],
+                additional_node_selectors = {},
+                app_name = 'prp-wn',
+                k8s_job_ttl = 24*3600): # clean after 1 day
       """
-      namespace: string
-         Monitored namespace
-      config is a dictionary of:
+      Arguments:
+         namespace: string
+             Monitored namespace
          condor_host: string (Optional)
              DNS address of the HTCOndor collector
          k8s_image: string (Optional)
@@ -27,11 +74,17 @@ class ProvisionerK8S:
              WN Container image pull policy
          priority_class: string (Optional)
              priorityClassName to associate with the pod
+         priority_class_cpu: string (Optional)
+             priorityClassName to associate with CPU pod
+         priority_class_cpu: string (Optional)
+             priorityClassName to associate with GPU pod
          base_tolerations: list of strings (Optional)
              Tolerations of the form NoSchedule/Exists to add to the container
+         base_pvc_volumes: list of strings (Optional)
+             PersistentVolumeClaims to add to the container, vvalues is mountpoint
          additional_labels: dictionary of strings (Optional)
              Labels to attach to the pod
-         additional_envs: list of (name,value) pairs (Optional)
+         additional_envs: dictionary of strings (Optional)
              Environment values to add to the container
          additional_volumes: dictionary of (volume,mount) pairs (Optional)
              Volumes to mount in the pod. Both volume and mount must be a dictionary.
@@ -40,24 +93,66 @@ class ProvisionerK8S:
          additional_node_selectors: dictionary of strings (Optional)
              nodeSelectors to attach to the pod
       """
+      self.namespace = copy.deepcopy(namespace)
+      self.condor_host = copy.deepcopy(condor_host)
+      self.k8s_image = copy.deepcopy(k8s_image)
+      self.k8s_image_pull_policy = copy.deepcopy(k8s_image_pull_policy)
+      self.priority_class = copy.deepcopy(priority_class)
+      self.priority_class_cpu = copy.deepcopy(priority_class_cpu)
+      self.priority_class_gpu = copy.deepcopy(priority_class_gpu)
+      self.base_tolerations = copy.deepcopy(base_tolerations)
+      self.base_pvc_volumes = copy.deepcopy(base_pvc_volumes)
+      self.additional_labels = copy.deepcopy(additional_labels)
+      self.additional_envs = copy.deepcopy(additional_envs)
+      self.additional_volumes = copy.deepcopy(additional_volumes)
+      self.additional_tolerations = copy.deepcopy(additional_tolerations)
+      self.additional_node_selectors = additional_node_selectors
+      self.app_name = copy.deepcopy(app_name)
+      self.k8s_job_ttl = k8s_job_ttl
+
+   def parse(self,
+             dict,
+             fields=ProvisionerK8SConfigFields):
+      """Parse the valuies from a dictionary"""
+      update_parse(self.namespace, 'namespace', 'str', fields, dict)
+      update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
+      update_parse(self.k8s_image, 'k8s_image', 'str', fields, dict)
+      update_parse(self.k8s_image_pull_policy, 'k8s_image_pull_policy', 'str', fields, dict)
+      update_parse(self.priority_class, 'priority_class', 'str', fields, dict)
+      update_parse(self.priority_class_cpu, 'priority_class_cpu', 'str', fields, dict)
+      update_parse(self.priority_class_gpu, 'priority_class_gpu', 'str', fields, dict)
+      update_parse(self.base_tolerations, 'tolerations_list', 'list', fields, dict)
+      update_parse(self.base_pvc_volumes, 'pvc_volumes_dict', 'dict', fields, dict)
+      update_parse(self.additional_labels, 'labels_dict', 'dict', fields, dict)
+      update_parse(self.additional_envs, 'envs_dict', 'dict', fields, dict)
+      update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
+      update_parse(self.app_name, 'app_name', 'str', fields, dict)
+      update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
+
+
+class ProvisionerK8S:
+   """Kubernetes Query interface"""
+
+   def __init__(self, config):
       self.start_time = int(time.time())
-      self.app_name = config.get('app_name', "prp-wn")
-      self.k8s_job_ttl = int(config.get('k8s_job_ttl', 24 * 3600)) # clean after 1 day
       self.submitted = 0
       # use deepcopy to avoid surprising changes at runtime
-      self.namespace = copy.deepcopy(namespace)
-      self.condor_host = copy.deepcopy(config.get('condor_host', "prp-cm-htcondor.htcondor-portal.svc.cluster.local")))
-      self.k8s_image = copy.deepcopy(config.get('k8s_image', "sfiligoi/prp-portal-wn")))
-      self.k8s_image_pull_policy = copy.deepcopy(config.get('k8s_image_pull_policy', "Always"))
-      self.priority_class = copy.deepcopy(config.get('priority_class', None))
-      self.priority_class_cpu = copy.deepcopy(config.get('priority_class_cpu', None))
-      self.priority_class_gpu = copy.deepcopy(config.get('priority_class_gpu', None))
-      self.base_tolerations = copy.deepcopy(config.get('base_tolerations', []))
-      self.additional_labels = copy.deepcopy(config.get('additional_labels', {}))
-      self.additional_envs = copy.deepcopy(config.get('additional_envs', []))
-      self.additional_volumes = copy.deepcopy(config.get('additional_volumes', {}))
-      self.additional_tolerations = copy.deepcopy(config.get('additional_tolerations', []))
-      self.additional_node_selectors = copy.deepcopy(config.get('additional_node_selectors', {}))
+      self.app_name = copy.deepcopy(config.app_name)
+      self.k8s_job_ttl = config.k8s_job_ttl
+      self.namespace = copy.deepcopy(config.namespace)
+      self.condor_host = copy.deepcopy(config.condor_host)
+      self.k8s_image = copy.deepcopy(config.k8s_image)
+      self.k8s_image_pull_policy = copy.deepcopy(config.k8s_image_pull_policy)
+      self.priority_class = copy.deepcopy(config.priority_class)
+      self.priority_class_cpu = copy.deepcopy(config.priority_class_cpu)
+      self.priority_class_gpu = copy.deepcopy(config.priority_class_gpu)
+      self.base_tolerations = copy.deepcopy(config.base_tolerations)
+      self.base_pvc_volumes = copy.deepcopy(config.base_pvc_volumes)
+      self.additional_labels = copy.deepcopy(config.additional_labels)
+      self.additional_envs = copy.deepcopy(config.additional_envs)
+      self.additional_volumes = copy.deepcopy(config.additional_volumes)
+      self.additional_tolerations = copy.deepcopy(config.additional_tolerations)
+      self.additional_node_selectors = copy.deepcopy(config.additional_node_selectors)
       return
 
    def authenticate(self, use_service_account=True):
@@ -122,8 +217,9 @@ class ProvisionerK8S:
                    ('NUM_CPUS', "%i"%int_vals['CPUs']),
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
                    ('MEMORY', "%i"%int_vals['Memory']),
-                   ('DISK',   "%i"%int_vals['Disk'])] + \
-                 self.additional_envs
+                   ('DISK',   "%i"%int_vals['Disk'])]
+      for k in self.additional_envs:
+         env_list.append((k,self.additional_envs[k]))
       self._augment_environment(env_list, attrs)
 
       # bosy will need it in list/dict form
@@ -231,7 +327,13 @@ class ProvisionerK8S:
       return (self.k8s_image,self.k8s_image_pull_policy)
 
    def _get_priority_class(self, attrs):
-      return self.priority_class
+      if int(attrs['GPUs'])>0:
+         pc = self.priority_class_gpu
+      else:
+         pc = self.priority_class_cpu
+      if pc==None:
+         pc = self.priority_class
+      return pc
 
    def _augment_labels(self, labels, attrs):
       """Add any additional labels to the dictionary (attrs is read-only)"""
@@ -243,6 +345,20 @@ class ProvisionerK8S:
 
    def _augment_volumes(self, volumes, attrs):
       """Add any additional (volume,mount) pair to the dictionary (attrs is read-only)"""
+
+      for v in self.base_pvc_volumes:
+         volumes[v] = \
+                   (
+                      {
+                         'persistentVolumeClaim': {
+                            'claimName': v
+                         }
+                      },
+                      {
+                         'mountPath': self.base_pvc_volumes[v]
+                      }
+                   )
+
 
       # by default, we mount the token secret
       volumes['configpasswd'] = \
