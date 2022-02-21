@@ -42,6 +42,7 @@ def update_parse(var, field, ftype,
          var = parse_list(rval)
       elif (ftype=="dict"):
          var = parse_dict(rval)
+   return var
 
 class ProvisionerK8SConfig:
    """Config fie for ProvisionerK8S"""
@@ -114,20 +115,20 @@ class ProvisionerK8SConfig:
              dict,
              fields=ProvisionerK8SConfigFields):
       """Parse the valuies from a dictionary"""
-      update_parse(self.namespace, 'namespace', 'str', fields, dict)
-      update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
-      update_parse(self.k8s_image, 'k8s_image', 'str', fields, dict)
-      update_parse(self.k8s_image_pull_policy, 'k8s_image_pull_policy', 'str', fields, dict)
-      update_parse(self.priority_class, 'priority_class', 'str', fields, dict)
-      update_parse(self.priority_class_cpu, 'priority_class_cpu', 'str', fields, dict)
-      update_parse(self.priority_class_gpu, 'priority_class_gpu', 'str', fields, dict)
-      update_parse(self.base_tolerations, 'tolerations_list', 'list', fields, dict)
-      update_parse(self.base_pvc_volumes, 'pvc_volumes_dict', 'dict', fields, dict)
-      update_parse(self.additional_labels, 'labels_dict', 'dict', fields, dict)
-      update_parse(self.additional_envs, 'envs_dict', 'dict', fields, dict)
-      update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
-      update_parse(self.app_name, 'app_name', 'str', fields, dict)
-      update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
+      self.namespace = update_parse(self.namespace, 'namespace', 'str', fields, dict)
+      self.condor_host = update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
+      self.k8s_image = update_parse(self.k8s_image, 'k8s_image', 'str', fields, dict)
+      self.k8s_image_pull_policy = update_parse(self.k8s_image_pull_policy, 'k8s_image_pull_policy', 'str', fields, dict)
+      self.priority_class = update_parse(self.priority_class, 'priority_class', 'str', fields, dict)
+      self.priority_class_cpu = update_parse(self.priority_class_cpu, 'priority_class_cpu', 'str', fields, dict)
+      self.priority_class_gpu = update_parse(self.priority_class_gpu, 'priority_class_gpu', 'str', fields, dict)
+      self.base_tolerations = update_parse(self.base_tolerations, 'tolerations_list', 'list', fields, dict)
+      self.base_pvc_volumes = update_parse(self.base_pvc_volumes, 'pvc_volumes_dict', 'dict', fields, dict)
+      self.additional_labels = update_parse(self.additional_labels, 'labels_dict', 'dict', fields, dict)
+      self.additional_envs = update_parse(self.additional_envs, 'envs_dict', 'dict', fields, dict)
+      self.additional_node_selectors = update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
+      self.app_name = update_parse(self.app_name, 'app_name', 'str', fields, dict)
+      self.k8s_job_ttl = update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
 
 
 class ProvisionerK8S:
