@@ -22,7 +22,7 @@ def parse_list(list_str):
    return list_str.split(',')
 
 def parse_dict(dict_str):
-   els = dict_str(",")
+   els = dict_str.split(",")
    out = {}
    for el in els:
      j,v = el.split(":")
