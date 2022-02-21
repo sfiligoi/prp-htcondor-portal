@@ -30,8 +30,8 @@ class ProvisionerClusteringAttributes:
    def __init__(self):
       self.attributes=OrderedDict()
       self.attributes['CPUs']=1
-      self.attributes['Memory']=1024
-      self.attributes['Disk']=100000
+      self.attributes['Memory']=4096
+      self.attributes['Disk']=8000000
       self.attributes['DiskVolumes']=''
       self.attributes['GPUs']=0
       self.attributes['GPUTypes']=''
