@@ -22,4 +22,3 @@ if [ "x${NVIDIA_SYMLINK}" == "xyes" ]; then
   done
 fi
 
-exit 0
