@@ -50,6 +50,8 @@ RUN chmod a+rx /usr/sbin/container_startup.sh
 # Additional stratup scripts can be uploaded here
 RUN mkdir -p /etc/constainer_startup/image-config.d
 
+ADD image-config.d/* /etc/constainer_startup/image-config.d/
+
 RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
 
 #
@@ -58,6 +60,7 @@ RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
 # STARTD_NOCLAIM_SHUTDOWN MASTER_PEACEFUL_SHUTDOWN
 # NUM_CPUS MEMORY DISK NUM_GPUS
 # K8S_NAMESPACE
+# NVIDIA_SYMLINK
 #
 
 CMD ["/usr/sbin/container_startup.sh"]
