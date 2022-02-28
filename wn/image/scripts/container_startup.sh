@@ -108,7 +108,14 @@ wait $!
 rc=$?
 echo "`date` End of condor_master, rc=${rc}"
 
-echo "tail /var/log/condor/MasterLog"
+echo "=== tail /var/log/condor/MasterLog"
 tail -100 /var/log/condor/MasterLog
+
+echo "=== tail /var/log/condor/StartLog"
+tail -100 /var/log/condor/StartLog
+
+echo "========= startd_history ============="
+cat /var/log/condor/startd_history
+echo "========== end history  =============="
 
 exit ${rc}
