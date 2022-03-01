@@ -39,7 +39,7 @@ class ProvisionerSchedd:
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         myjobs=s.xquery('(JobStatus=?=%i)&&(RequestK8SNamespace=?="%s")'%(job_status,self.namespace), full_projection)
+         myjobs=s.xquery('(JobStatus=?=%i)&&regexp(RequestK8SNamespace,"%s")'%(job_status,self.namespace), full_projection)
          self._append_jobs(sclassad['Name'], jobs, myjobs)
 
       return jobs
