@@ -208,13 +208,13 @@ class ProvisionerK8S:
       # Similarly for memry, but request 80% there
       req = {
                'memory':  '%iMi'%int(int_vals['Memory']*0.8),
-               'cpu':            int_vals['CPUs']*0.75,
+               'cpu':            (int_vals['CPUs']*0.75),
                'nvidia.com/gpu': int_vals['GPUs']
             }
-      # but enforce CPU limit
+      # but enforce CPU limit + delta
       lim = {
-               'memory':  '%iMi'%int_vals['Memory'],
-               'cpu':            int_vals['CPUs'],
+               'memory':  '%iMi'%(int_vals['Memory']+1000),
+               'cpu':            (int_vals['CPUs']+0.25),
                'nvidia.com/gpu': int_vals['GPUs']
             }
       #TODO: Request Ephemeral storage
