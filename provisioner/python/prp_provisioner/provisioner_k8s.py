@@ -228,6 +228,12 @@ class ProvisionerK8S:
       for el in env_list:
          env.append({'name': el[0], 'value': el[1]})
 
+      # pass though the node we are running on
+      nnobj=kubernetes.client.models.V1ObjectFieldSelector(field_path="spec.nodeName")
+      nnenvsrc=kubernetes.client.models.V1EnvVarSource(field_ref=nnobj)
+      nnenv=kubernetes.client.models.V1EnvVar(name='PHYSICAL_HOSTNAME', value='', value_from=nnenvsrc)
+      env.append(nnenv)
+
       # no other defaults, so just start with the additional ones
       volumes_raw = copy.deepcopy(self.additional_volumes)
       self._augment_volumes(volumes_raw, attrs)
