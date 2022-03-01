@@ -16,7 +16,7 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'priority_class','priority_class_cpu','priority_class_gpu',
                               'tolerations_list', 'node_selectors_dict',
                               'labels_dict', 'envs_dict', 'pvc_volumes_dict',
-                              'app_name','k8s_job_ttl')
+                              'app_name','k8s_job_ttl','k8s_domain')
 
 def parse_list(list_str):
    return list_str.split(',')
@@ -62,7 +62,8 @@ class ProvisionerK8SConfig:
                 additional_tolerations = [],
                 additional_node_selectors = {},
                 app_name = 'prp-wn',
-                k8s_job_ttl = 24*3600): # clean after 1 day
+                k8s_job_ttl = 24*3600, # clean after 1 day
+                k8s_domain='optiputer.net'):
       """
       Arguments:
          namespace: string
@@ -93,6 +94,8 @@ class ProvisionerK8SConfig:
              Tolerations to add to the container
          additional_node_selectors: dictionary of strings (Optional)
              nodeSelectors to attach to the pod
+         k8s_domain: string (Optional)
+             Kubernetes domain to advertise
       """
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = copy.deepcopy(condor_host)
@@ -110,6 +113,7 @@ class ProvisionerK8SConfig:
       self.additional_node_selectors = additional_node_selectors
       self.app_name = copy.deepcopy(app_name)
       self.k8s_job_ttl = k8s_job_ttl
+      self.k8s_domain = copy.deepcopy(k8s_domain)
 
    def parse(self,
              dict,
@@ -117,6 +121,7 @@ class ProvisionerK8SConfig:
       """Parse the valuies from a dictionary"""
       self.namespace = update_parse(self.namespace, 'namespace', 'str', fields, dict)
       self.condor_host = update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
+      self.k8s_domain = update_parse(self.k8s_domain, 'k8s_domain', 'str', fields, dict)
       self.k8s_image = update_parse(self.k8s_image, 'k8s_image', 'str', fields, dict)
       self.k8s_image_pull_policy = update_parse(self.k8s_image_pull_policy, 'k8s_image_pull_policy', 'str', fields, dict)
       self.priority_class = update_parse(self.priority_class, 'priority_class', 'str', fields, dict)
@@ -154,6 +159,7 @@ class ProvisionerK8S:
       self.additional_volumes = copy.deepcopy(config.additional_volumes)
       self.additional_tolerations = copy.deepcopy(config.additional_tolerations)
       self.additional_node_selectors = copy.deepcopy(config.additional_node_selectors)
+      self.k8s_domain = copy.deepcopy(config.k8s_domain)
       return
 
    def authenticate(self, use_service_account=True):
@@ -215,6 +221,7 @@ class ProvisionerK8S:
       env_list = [ ('CONDOR_HOST', self.condor_host),
                    ('STARTD_NOCLAIM_SHUTDOWN', '1200'),
                    ('K8S_NAMESPACE', self.namespace),
+                   ('K8S_DOMAIN', self.k8s_domain),
                    ('NUM_CPUS', "%i"%int_vals['CPUs']),
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
                    ('MEMORY', "%i"%int_vals['Memory']),
