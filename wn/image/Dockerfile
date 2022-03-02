@@ -62,6 +62,7 @@ RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
 # PHYSICAL_HOSTNAME
 # K8S_NAMESPACE K8S_DOMAIN
 # NVIDIA_SYMLINK
+# FORCE_NAMESPACE_MATCHING ADDITIONAL_REQUIREMENTS
 #
 
 CMD ["/usr/sbin/container_startup.sh"]
