@@ -58,6 +58,8 @@ echo 'STARTD_EXPRS = $(STARTD_EXPRS) K8SNamespace K8SDomain K8SPodName' \
   >> /etc/condor/config.d/02-k8s-env.conf
 
 add_values_to 01-k8s-env.conf \
+    K8SProvisionerType "\"${K8S_PROVISIONER_TYPE:-PRPHTCondorProvisioner}\"" \
+    K8SProvisionerName "\"${K8S_PROVISIONER_NAME:-Unknown}\"" \
     K8SNamespace "\"${K8S_NAMESPACE:-Invalid}\"" \
     K8SDomain "\"${K8S_DOMAIN:-Unknown}\"" \
     K8SPodName "\"${HOSTNAME:-Unknown}\""
