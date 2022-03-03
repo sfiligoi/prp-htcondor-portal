@@ -11,10 +11,34 @@ import re
 import htcondor
 import classad
 
+ProvisionerHTCConfigFields = ('namespace','condor_host',
+                              'app_name','k8s_domain')
+
+class ProvisionerHTCConfig:
+   """Config file for HTCOndor provisioning classes"""
+
+   def __init__(self, namespace,
+                condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
+                app_name = 'prp-wn',
+                k8s_domain='optiputer.net'):
+      self.namespace = copy.deepcopy(namespace)
+      self.condor_host = copy.deepcopy(condor_host)
+      self.app_name = copy.deepcopy(app_name)
+      self.k8s_domain = copy.deepcopy(k8s_domain)
+
+   def parse(self,
+             dict,
+             fields=ProvisionerHTCConfigFields):
+      """Parse the valuies from a dictionary"""
+      self.namespace = update_parse(self.namespace, 'namespace', 'str', fields, dict)
+      self.condor_host = update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
+      self.k8s_domain = update_parse(self.k8s_domain, 'k8s_domain', 'str', fields, dict)
+      self.app_name = update_parse(self.app_name, 'app_name', 'str', fields, dict)
+
 class ProvisionerSchedd:
    """HTCondor schedd interface"""
 
-   def __init__(self, namespace, trusted_schedds):
+   def __init__(self, trusted_schedds, config):
       """
       Arguments:
          namespace: string
@@ -22,7 +46,7 @@ class ProvisionerSchedd:
          trusted_schedds: dictionary, NameRegexp:AuthenticatedIdentityRegexp
              Set of schedds to query. Both name and AuthenticatedIdentity are regexp.
       """
-      self.namespace = copy.deepcopy(namespace)
+      self.namespace = copy.deepcopy(config.namespace)
       self.trusted_schedds = copy.deepcopy(trusted_schedds)
 
    def query_idle(self, projection=[]):
@@ -103,15 +127,15 @@ class ProvisionerSchedd:
 class ProvisionerCollector:
    """HTCondor Collector/startd interface"""
 
-   def __init__(self, namespace, startd_identity):
+   def __init__(self, startd_identity, config):
       """
       Arguments:
          namespace: string
              Monitored namespace
          startd_identity: string
-             AuthenticatedIdentityi Regexp used as a whitelist
+             AuthenticatedIdentity Regexp used as a whitelist
       """
-      self.namespace = copy.deepcopy(namespace)
+      self.namespace = copy.deepcopy(config.namespace)
       self.startd_identity = copy.deepcopy(startd_identity)
 
    def query(self,  projection=[]):

@@ -21,10 +21,12 @@ def main(config_fname, namespace, condor_host, max_pods_per_cluster=10, sleep_ti
    fconfig.read(config_fname)
    kconfig = provisioner_k8s.ProvisionerK8SConfig(namespace=namespace, condor_host=condor_host)
    kconfig.parse(fconfig['k8s'])
+   cconfig = provisioner_htcondor.ProvisionerHTCConfig(namespace=namespace, condor_host=condor_host)
+   cconfig.parse(fconfig['htcondor'])
    log_obj = provisioner_logging.ProvisionerStdoutLogging(want_log_debug=True)
    # TBD: Proper security
-   schedd_obj = provisioner_htcondor.ProvisionerSchedd(namespace, {'.*':'.*'})
-   collector_obj = provisioner_htcondor.ProvisionerCollector(namespace, '.*')
+   schedd_obj = provisioner_htcondor.ProvisionerSchedd({'.*':'.*'}), cconfig
+   collector_obj = provisioner_htcondor.ProvisionerCollector('.*', cconfig)
    k8s_obj = provisioner_k8s.ProvisionerK8S(kconfig)
    k8s_obj.authenticate()
 
