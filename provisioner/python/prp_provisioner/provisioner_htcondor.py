@@ -11,7 +11,7 @@ import re
 import htcondor
 import classad
 
-from provisioner_config_parser import update_parse
+from . import provisioner_config_parser
 
 ProvisionerHTCConfigFields = ('namespace','condor_host',
                               'app_name','k8s_domain',
@@ -38,12 +38,12 @@ class ProvisionerHTCConfig:
              dict,
              fields=ProvisionerHTCConfigFields):
       """Parse the valuies from a dictionary"""
-      self.namespace = update_parse(self.namespace, 'namespace', 'str', fields, dict)
-      self.condor_host = update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
-      self.k8s_domain = update_parse(self.k8s_domain, 'k8s_domain', 'str', fields, dict)
-      self.app_name = update_parse(self.app_name, 'app_name', 'str', fields, dict)
-      self.force_k8s_namespace_matching = update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
-      self.additional_requirements = update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
+      self.namespace = provisioner_config_parser.update_parse(self.namespace, 'namespace', 'str', fields, dict)
+      self.condor_host = provisioner_config_parser.update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
+      self.k8s_domain = provisioner_config_parser.update_parse(self.k8s_domain, 'k8s_domain', 'str', fields, dict)
+      self.app_name = provisioner_config_parser.update_parse(self.app_name, 'app_name', 'str', fields, dict)
+      self.force_k8s_namespace_matching = provisioner_config_parser.update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
+      self.additional_requirements = provisioner_config_parser.update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
 
 class ProvisionerSchedd:
    """HTCondor schedd interface"""
