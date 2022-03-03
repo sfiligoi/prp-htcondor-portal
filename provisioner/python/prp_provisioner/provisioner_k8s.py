@@ -11,38 +11,14 @@ import re
 import kubernetes
 import time
 
+from provisioner_config_parser import update_parse
+
 ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'k8s_image','k8s_image_pull_policy',
                               'priority_class','priority_class_cpu','priority_class_gpu',
                               'tolerations_list', 'node_selectors_dict',
                               'labels_dict', 'envs_dict', 'pvc_volumes_dict',
                               'app_name','k8s_job_ttl','k8s_domain')
-
-def parse_list(list_str):
-   return list_str.split(',')
-
-def parse_dict(dict_str):
-   els = dict_str.split(",")
-   out = {}
-   for el in els:
-     k,v = el.split(":")
-     out[k] = v
-   return out
-
-def update_parse(var, field, ftype,
-                 fields, dict):
-   """Update var if filed in both fields and dice, and parse according to ftype"""
-   if (field in fields) and (field in dict):
-      rval=dict[field]
-      if (ftype=="str"):
-         var = copy.deepcopy(rval)
-      elif (ftype=="int"):
-         var = int(rval)
-      elif (ftype=="list"):
-         var = parse_list(rval)
-      elif (ftype=="dict"):
-         var = parse_dict(rval)
-   return var
 
 class ProvisionerK8SConfig:
    """Config fie for ProvisionerK8S"""
