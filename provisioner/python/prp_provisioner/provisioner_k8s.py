@@ -194,7 +194,9 @@ class ProvisionerK8S:
                'nvidia.com/gpu': int_vals['GPUs']
             }
       #TODO: Request Ephemeral storage
-      env_list = [ ('CONDOR_HOST', self.condor_host),
+      env_list = [ ('K8S_PROVISIONER_TYPE', 'PRPHTCondorProvisioner'),
+                   ('K8S_PROVISIONER_NAME', self.app_name),
+                   ('CONDOR_HOST', self.condor_host),
                    ('STARTD_NOCLAIM_SHUTDOWN', '1200'),
                    ('K8S_NAMESPACE', self.namespace),
                    ('K8S_DOMAIN', self.k8s_domain),

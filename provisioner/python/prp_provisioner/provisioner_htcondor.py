@@ -137,17 +137,18 @@ class ProvisionerCollector:
       """
       self.namespace = copy.deepcopy(config.namespace)
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
+      self.app_name = copy.deepcopy(config.app_name)
       self.startd_identity = copy.deepcopy(startd_identity)
 
    def query(self,  projection=[]):
       """Return the list of startds for my namespace"""
 
-      full_projection=['Name','AuthenticatedIdentity','State','Activity','K8SPodName','K8SNamespace', 'K8SDomain']+projection
+      full_projection=['Name','AuthenticatedIdentity','State','Activity','K8SPodName','K8SNamespace', 'K8SDomain', 'K8SProvisionerType', 'K8SProvisionerName']+projection
       startds=[]
 
       c = htcondor.Collector()
       slist=c.query(ad_type=htcondor.AdTypes.Startd,projection=full_projection,
-                    constraint='(K8SNamespace=?="%s")&&(K8SDomain=?="%s")'%(self.namespace,self.k8s_domain))
+                    constraint='(K8SProvisionerType=?="PRPHTCondorProvisioner")&&(K8SProvisionerName=?="%s")&&(K8SNamespace=?="%s")&&(K8SDomain=?="%s")'%(self.app_name,self.namespace,self.k8s_domain))
       for s in slist:
          try:
             sname=s['Name']
