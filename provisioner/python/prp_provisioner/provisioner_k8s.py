@@ -18,7 +18,9 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'priority_class','priority_class_cpu','priority_class_gpu',
                               'tolerations_list', 'node_selectors_dict',
                               'labels_dict', 'envs_dict', 'pvc_volumes_dict',
-                              'app_name','k8s_job_ttl','k8s_domain')
+                              'app_name','k8s_job_ttl','k8s_domain',
+                              'force_k8s_namespace_matching',
+                              'additional_requirements')
 
 class ProvisionerK8SConfig:
    """Config fie for ProvisionerK8S"""
@@ -39,7 +41,9 @@ class ProvisionerK8SConfig:
                 additional_node_selectors = {},
                 app_name = 'prp-wn',
                 k8s_job_ttl = 24*3600, # clean after 1 day
-                k8s_domain='optiputer.net'):
+                k8s_domain = 'optiputer.net',
+                force_k8s_namespace_matching = "yes",
+                additional_requirements = ""):
       """
       Arguments:
          namespace: string
@@ -90,6 +94,8 @@ class ProvisionerK8SConfig:
       self.app_name = copy.deepcopy(app_name)
       self.k8s_job_ttl = k8s_job_ttl
       self.k8s_domain = copy.deepcopy(k8s_domain)
+      self.force_k8s_namespace_matching = copy.deepcopy(force_k8s_namespace_matching)
+      self.additional_requirements = copy.deepcopy(additional_requirements)
 
    def parse(self,
              dict,
@@ -110,6 +116,8 @@ class ProvisionerK8SConfig:
       self.additional_node_selectors = update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
       self.app_name = update_parse(self.app_name, 'app_name', 'str', fields, dict)
       self.k8s_job_ttl = update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
+      self.force_k8s_namespace_matching = update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
+      self.additional_requirements = update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
 
 
 class ProvisionerK8S:
@@ -136,6 +144,8 @@ class ProvisionerK8S:
       self.additional_tolerations = copy.deepcopy(config.additional_tolerations)
       self.additional_node_selectors = copy.deepcopy(config.additional_node_selectors)
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
+      self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
+      self.additional_requirements = copy.deepcopy(config.additional_requirements)
       return
 
    def authenticate(self, use_service_account=True):
@@ -204,6 +214,12 @@ class ProvisionerK8S:
                    ('NUM_GPUS', "%i"%int_vals['GPUs']),
                    ('MEMORY', "%i"%int_vals['Memory']),
                    ('DISK',   "%i"%int_vals['Disk'])]
+
+      if self.force_k8s_namespace_matching != "":
+         env_list.append(('FORCE_K8SNAMESPACE_MATCHING',self.force_k8s_namespace_matching))
+      if self.additional_requirements != "" :
+         env_list.append(('ADDITIONAL_REQUIREMENTS',self.additional_requirements))
+
       for k in self.additional_envs:
          env_list.append((k,self.additional_envs[k]))
       self._augment_environment(env_list, attrs)

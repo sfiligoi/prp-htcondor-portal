@@ -11,8 +11,12 @@ import re
 import htcondor
 import classad
 
+from provisioner_config_parser import update_parse
+
 ProvisionerHTCConfigFields = ('namespace','condor_host',
-                              'app_name','k8s_domain')
+                              'app_name','k8s_domain',
+                              'force_k8s_namespace_matching',
+                              'additional_requirements')
 
 class ProvisionerHTCConfig:
    """Config file for HTCOndor provisioning classes"""
@@ -20,11 +24,15 @@ class ProvisionerHTCConfig:
    def __init__(self, namespace,
                 condor_host="prp-cm-htcondor.htcondor-portal.svc.cluster.local",
                 app_name = 'prp-wn',
-                k8s_domain='optiputer.net'):
+                k8s_domain='optiputer.net',
+                force_k8s_namespace_matching = "yes",
+                additional_requirements = ""):
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = copy.deepcopy(condor_host)
       self.app_name = copy.deepcopy(app_name)
       self.k8s_domain = copy.deepcopy(k8s_domain)
+      self.force_k8s_namespace_matching = copy.deepcopy(force_k8s_namespace_matching)
+      self.additional_requirements = copy.deepcopy(additional_requirements)
 
    def parse(self,
              dict,
@@ -34,6 +42,8 @@ class ProvisionerHTCConfig:
       self.condor_host = update_parse(self.condor_host, 'condor_host', 'str', fields, dict)
       self.k8s_domain = update_parse(self.k8s_domain, 'k8s_domain', 'str', fields, dict)
       self.app_name = update_parse(self.app_name, 'app_name', 'str', fields, dict)
+      self.force_k8s_namespace_matching = update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
+      self.additional_requirements = update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
 
 class ProvisionerSchedd:
    """HTCondor schedd interface"""
@@ -46,8 +56,10 @@ class ProvisionerSchedd:
          trusted_schedds: dictionary, NameRegexp:AuthenticatedIdentityRegexp
              Set of schedds to query. Both name and AuthenticatedIdentity are regexp.
       """
-      self.namespace = copy.deepcopy(config.namespace)
       self.trusted_schedds = copy.deepcopy(trusted_schedds)
+      self.namespace = copy.deepcopy(config.namespace)
+      self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
+      self.additional_requirements = copy.deepcopy(config.additional_requirements)
 
    def query_idle(self, projection=[]):
       """Return the list of idle jobs for my namespace"""
@@ -58,12 +70,18 @@ class ProvisionerSchedd:
       """Return the list of jobs for my namespace"""
 
       full_projection=['ClusterId','ProcId','JobStatus','RequestK8SNamespace']+projection
+      query_str='(JobStatus=?=%i)'%job_status
+      if self.force_k8s_namespace_matching!="no":
+         query_str += ' && regexp(RequestK8SNamespace,"%s")'%self.namespace
+      if self.additional_requirements != "":
+         query_str += ' && (%s)'%self.additional_requirements
+
       jobs=[]
 
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         myjobs=s.xquery('(JobStatus=?=%i)&&regexp(RequestK8SNamespace,"%s")'%(job_status,self.namespace), full_projection)
+         myjobs=s.xquery(query_str, full_projection)
          self._append_jobs(sclassad['Name'], jobs, myjobs)
 
       return jobs
@@ -135,10 +153,10 @@ class ProvisionerCollector:
          startd_identity: string
              AuthenticatedIdentity Regexp used as a whitelist
       """
+      self.startd_identity = copy.deepcopy(startd_identity)
       self.namespace = copy.deepcopy(config.namespace)
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
       self.app_name = copy.deepcopy(config.app_name)
-      self.startd_identity = copy.deepcopy(startd_identity)
 
    def query(self,  projection=[]):
       """Return the list of startds for my namespace"""
