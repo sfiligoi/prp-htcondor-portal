@@ -117,7 +117,7 @@ class ProvisionerK8SCluster(ProvisionerCluster):
          elif phase=="Pending":
             # we can safely count these at all times
             cnt+=1
-         elif phase=="Succeeded":
+         elif (phase=="Succeeded") or (phase=="Failed"):
             # we can safely ignore these
             pass
          else:
