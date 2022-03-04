@@ -166,7 +166,7 @@ class ProvisionerK8S:
 
       k8s = kubernetes.client.CoreV1Api()
       plist = k8s.list_namespaced_pod(namespace=self.namespace,
-                                     label_selector="prp-htcondor-portal=wn")
+                                     label_selector="prp-htcondor-portal=wn,k8s-app=%s"%self.app_name)
       # TBD: We may need to check for continuation flag
       self._append_pods(pods,plist.items)
 
