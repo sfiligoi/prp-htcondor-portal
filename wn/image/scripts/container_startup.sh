@@ -101,7 +101,7 @@ trap 'echo signal received!; kill $(jobs -p); wait' SIGINT SIGTERM
 # This way other users/pods get a chance to use these resources
 # (if no-one else is requesting, we will get them back in a new pod)
 mps="${MASTER_PEACEFUL_SHUTDOWN:-7200}"
-(sleep ${mps}; condor_off -master -peaceful; echo "`date` Sending peaceful shutdown") &
+(sleep ${mps}; condor_off -daemon master -peaceful; echo "`date` Sending peaceful shutdown") &
 
 # we want to live only as long as htcondor is alive
 echo "`date` Starting condor_master"
