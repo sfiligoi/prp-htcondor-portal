@@ -16,7 +16,7 @@ from . import provisioner_config_parser
 ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'k8s_image','k8s_image_pull_policy',
                               'priority_class','priority_class_cpu','priority_class_gpu',
-                              'tolerations_list', 'node_selectors_dict',
+                              'tolerations_list', 'node_selectors_dict', 'node_affinity_dict',
                               'labels_dict', 'envs_dict', 'pvc_volumes_dict',
                               'app_name','k8s_job_ttl','k8s_domain',
                               'force_k8s_namespace_matching',
@@ -43,7 +43,8 @@ class ProvisionerK8SConfig:
                 k8s_job_ttl = 24*3600, # clean after 1 day
                 k8s_domain = 'optiputer.net',
                 force_k8s_namespace_matching = "yes",
-                additional_requirements = ""):
+                additional_requirements = "",
+                node_affinity_dict = {}):
       """
       Arguments:
          namespace: string
@@ -76,6 +77,10 @@ class ProvisionerK8SConfig:
              nodeSelectors to attach to the pod
          k8s_domain: string (Optional)
              Kubernetes domain to advertise
+         node_affinity_dict: dictionary of node affinity (Optional)
+             If key is prepended with ^, NotIn is used (In else)
+             Each value is either a tuple of strings
+             or a | separated string
       """
       self.namespace = copy.deepcopy(namespace)
       self.condor_host = copy.deepcopy(condor_host)
@@ -96,6 +101,7 @@ class ProvisionerK8SConfig:
       self.k8s_domain = copy.deepcopy(k8s_domain)
       self.force_k8s_namespace_matching = copy.deepcopy(force_k8s_namespace_matching)
       self.additional_requirements = copy.deepcopy(additional_requirements)
+      self.node_affinity_dict = copy.deepcopy(node_affinity_dict)
 
    def parse(self,
              dict,
@@ -118,7 +124,7 @@ class ProvisionerK8SConfig:
       self.k8s_job_ttl = provisioner_config_parser.update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
       self.force_k8s_namespace_matching = provisioner_config_parser.update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
       self.additional_requirements = provisioner_config_parser.update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
-
+      self.node_affinity_dict = provisioner_config_parser.update_parse(self.node_affinity_dict, 'node_affinity_dict', 'dict', fields, dict)
 
 class ProvisionerK8S:
    """Kubernetes Query interface"""
@@ -146,6 +152,7 @@ class ProvisionerK8S:
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
       self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
       self.additional_requirements = copy.deepcopy(config.additional_requirements)
+      self.node_affinity_dict = copy.deepcopy(config.node_affinity_dict)
       return
 
    def authenticate(self, use_service_account=True):
@@ -262,6 +269,23 @@ class ProvisionerK8S:
       node_selectors = copy.deepcopy(self.additional_node_selectors)
       self._augment_node_selectors(node_selectors, attrs)
 
+      node_affinity_selectors = []
+      for k in self.node_affinity_dict:
+         if k[0]=='^':
+            nstr=k[1:]
+            ostr="NotIn"
+         else:
+            nstr=k
+            ostr="In"
+         val=self.node_affinity_dict[k]
+         if type(val)==type(""):
+            val=val.strip().split("|")
+         node_affinity_selectors.append( {"key":nstr, "operator":ostr, 'values':val} )
+         # avoid accidental reuse
+         del nstr
+         del ostr
+         del val
+
       k8s_image,k8s_image_pull_policy = self._get_k8s_image(attrs)
       priority_class = self._get_priority_class(attrs)
 
@@ -288,6 +312,13 @@ class ProvisionerK8S:
                   'restartPolicy': 'Never',
                   'tolerations' : tolerations,
                   'nodeSelector' : node_selectors,
+                  "affinity": {
+                   "nodeAffinity": {
+                    "requiredDuringSchedulingIgnoredDuringExecution": {
+                     "nodeSelectorTerms": [ { "matchExpressions": node_affinity_selectors } ]
+                    }
+                   }
+                  },
                   'containers': [{
                      'name': 'htcondor',
                      'image': k8s_image,
