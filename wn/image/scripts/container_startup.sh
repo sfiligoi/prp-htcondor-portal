@@ -54,7 +54,7 @@ if [ "x${STARTD_NOCLAIM_SHUTDOWN}" != "x" ]; then
 fi
 
 echo "# This file was created by $prog" > /etc/condor/config.d/02-k8s-env.conf
-echo 'STARTD_EXPRS = $(STARTD_EXPRS) K8SNamespace K8SDomain K8SPodName K8SProvisionerType K8SProvisionerName' \
+echo 'STARTD_EXPRS = $(STARTD_EXPRS) K8SNamespace K8SDomain K8SPodName K8SProvisionerType K8SProvisionerName FORCE_K8SNAMESPACE_MATCHING' \
   >> /etc/condor/config.d/02-k8s-env.conf
 
 add_values_to 01-k8s-env.conf \
@@ -62,7 +62,8 @@ add_values_to 01-k8s-env.conf \
     K8SProvisionerName "\"${K8S_PROVISIONER_NAME:-Unknown}\"" \
     K8SNamespace "\"${K8S_NAMESPACE:-Invalid}\"" \
     K8SDomain "\"${K8S_DOMAIN:-Unknown}\"" \
-    K8SPodName "\"${HOSTNAME:-Unknown}\""
+    K8SPodName "\"${HOSTNAME:-Unknown}\"" \
+    FORCE_K8SNAMESPACE_MATCHING "\"${FORCE_K8SNAMESPACE_MATCHING:-yes}\""
 
 # Bug workaround: daemons will die if they can't raise the number of FD's;
 # cap the request if we can't raise it.
