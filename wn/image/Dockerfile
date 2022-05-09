@@ -1,12 +1,9 @@
 FROM nvidia/cuda:11.0.3-base-centos7
 
 # OSG RPMs
-RUN yum -y install https://repo.opensciencegrid.org/osg/3.5/osg-3.5-el7-release-latest.rpm && \
+RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-latest.rpm && \
     yum -y install epel-release \
                    yum-plugin-priorities
-
-# need 3.5-upcoming for token support
-RUN sed -i 's/enabled=0/enabled=1/g' /etc/yum.repos.d/osg-upcoming.repo && yum clean all
 
 RUN yum -y install less which \
                    osg-wn-client \
