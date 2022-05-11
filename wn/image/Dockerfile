@@ -45,9 +45,11 @@ ADD scripts/container_startup.sh /usr/sbin/container_startup.sh
 RUN chmod a+rx /usr/sbin/container_startup.sh
 
 # Additional stratup scripts can be uploaded here
-RUN mkdir -p /etc/constainer_startup/image-config.d
+# plus historic hack around a typo
+RUN mkdir -p /etc/container_startup/image-config.d; \
+    ln -s /etc/container_startup /etc/constainer_startup
 
-ADD image-config.d/* /etc/constainer_startup/image-config.d/
+ADD image-config.d/* /etc/container_startup/image-config.d/
 
 RUN groupadd -g 3001 htcuser && useradd -u 3001 -g 3001 -s /usr/bin/bash htcuser
 
