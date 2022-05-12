@@ -6,6 +6,9 @@ cat >>  "${PILOT_CONFIG_FILE}" << EOF
 # unless FORCE_K8SNAMESPACE_MATCHING=="no"
 #
 
+FORCE_K8SNAMESPACE_MATCHING = \"${FORCE_K8SNAMESPACE_MATCHING:-no}\"
+STARTD_EXPRS = \$(STARTD_EXPRS) FORCE_K8SNAMESPACE_MATCHING
+
 MATCHING_START = ( (FORCE_K8SNAMESPACE_MATCHING=?="no") || regexp(TARGET.RequestK8SNamespace,K8SNamespace) )
 
 #
@@ -25,7 +28,6 @@ PROVISIONING_START = \$(PROVISIONING_START) && \\
                      ifthenelse(TARGET.RequestGPUs=!=undefined, \\
                                 ifthenelse(GPUs=!=undefined, GPUs=?=TARGET.RequestGPUs, TARGET.RequestGPUs=?=0), \\
                                 (GPUs=?=undefined) || (GPUs=?=0))
-
 
 START = ( \$(START) ) && ( \$(PROVISIONING_START) ) && ( \$(MATCHING_START) )
 
