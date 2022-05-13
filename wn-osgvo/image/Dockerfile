@@ -15,6 +15,7 @@ RUN chmod a+rx /bin/entrypoint.sh
 
 # system level scripts
 COPY scripts/01_token.sh /etc/entrypoint/image-config.d/01_token.sh
+COPY scripts/01_no_condor_host.sh /etc/entrypoint/image-config.d/01_no_condor_host.sh
 
 # pilot level scripts
 COPY scripts/19_set_resources.sh /etc/osg/image-init.d/19_set_resources.sh
@@ -26,7 +27,6 @@ COPY scripts/22_set_requirements.sh /etc/osg/image-init.d/22_set_requirements.sh
 #
 # In addition to osgvo-docker-pilot envs,
 # it accepts also the following env variables
-# CONDOR_HOST
 # NUM_CPUS MEMORY DISK NUM_GPUS
 # PHYSICAL_HOSTNAME
 # K8S_NAMESPACE K8S_DOMAIN
