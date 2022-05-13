@@ -35,6 +35,6 @@ EOF
 
 
 if [ "x${ADDITIONAL_REQUIREMENTS}" != "x" ]; then
-  echo "# Additional requirements added at runtime " > "${PILOT_CONFIG_FILE}"
+  echo "# Additional requirements added at runtime " >> "${PILOT_CONFIG_FILE}"
   echo "MATCHING_START = ( \$(MATCHING_START) ) && ( ${ADDITIONAL_REQUIREMENTS} )" >> "${PILOT_CONFIG_FILE}"
 fi
