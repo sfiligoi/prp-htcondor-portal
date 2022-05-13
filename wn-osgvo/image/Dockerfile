@@ -13,8 +13,10 @@ RUN mv /bin/entrypoint.sh /bin/entrypoint.osg.sh
 COPY scripts/entrypoint.sh /bin/entrypoint.sh
 RUN chmod a+rx /bin/entrypoint.sh
 
-COPY scripts/01_token.sh /etc/osg/image-init.d/01_token.sh
+# system level scripts
+COPY scripts/01_token.sh /etc/entrypoint/image-config.d/01_token.sh
 
+# pilot level scripts
 COPY scripts/19_set_resources.sh /etc/osg/image-init.d/19_set_resources.sh
 COPY scripts/20_advertise_k8s_domain.sh /etc/osg/image-init.d/20_advertise_k8s_domain.sh
 COPY scripts/21_advertise_k8s_provisioner.sh  /etc/osg/image-init.d/21_advertise_k8s_provisioner.sh
