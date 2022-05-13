@@ -48,14 +48,17 @@ class ProvisionerHTCConfig:
 class ProvisionerSchedd:
    """HTCondor schedd interface"""
 
-   def __init__(self, trusted_schedds, config):
+   def __init__(self, log_obj, trusted_schedds, config):
       """
       Arguments:
+         log_obj: object
+             Logging object
          namespace: string
              Monitored namespace
          trusted_schedds: dictionary, NameRegexp:AuthenticatedIdentityRegexp
              Set of schedds to query. Both name and AuthenticatedIdentity are regexp.
       """
+      self.log_obj = log_obj
       self.trusted_schedds = copy.deepcopy(trusted_schedds)
       self.namespace = copy.deepcopy(config.namespace)
       self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
@@ -81,8 +84,14 @@ class ProvisionerSchedd:
       sobjs=self._get_schedd_objs()
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
-         myjobs=s.xquery(query_str, full_projection)
-         self._append_jobs(sclassad['Name'], jobs, myjobs)
+         sname=sclassad['Name']
+         try:
+            myjobs=s.xquery(query_str, full_projection)
+         except:
+            self.log_obj.log_debug("[ProvisionerSchedd] Failed to query HTCondor schedd '%s'"%sname)
+            raise
+
+         self._append_jobs(sname, jobs, myjobs)
 
       return jobs
 
@@ -112,7 +121,12 @@ class ProvisionerSchedd:
    def _get_schedd_objs(self):
       sobjs=[]
       c = htcondor.Collector()
-      slist=c.query(ad_type=htcondor.AdTypes.Schedd,projection=['Name','AuthenticatedIdentity','MyAddress','AddressV1','Machine'])
+      try:
+         slist=c.query(ad_type=htcondor.AdTypes.Schedd,projection=['Name','AuthenticatedIdentity','MyAddress','AddressV1','Machine'])
+      except:
+         self.log_obj.log_debug("[ProvisionerSchedd] Failed to retrieve HTCondor schedd list")
+         raise
+
       for s in slist:
          try:
             sname=s['Name']
@@ -145,14 +159,17 @@ class ProvisionerSchedd:
 class ProvisionerCollector:
    """HTCondor Collector/startd interface"""
 
-   def __init__(self, startd_identity, config):
+   def __init__(self, log_obj, startd_identity, config):
       """
       Arguments:
+         log_obj: object
+             Logging object
          namespace: string
              Monitored namespace
          startd_identity: string
              AuthenticatedIdentity Regexp used as a whitelist
       """
+      self.log_obj = log_obj
       self.startd_identity = copy.deepcopy(startd_identity)
       self.namespace = copy.deepcopy(config.namespace)
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
@@ -165,8 +182,13 @@ class ProvisionerCollector:
       startds=[]
 
       c = htcondor.Collector()
-      slist=c.query(ad_type=htcondor.AdTypes.Startd,projection=full_projection,
-                    constraint='(K8SProvisionerType=?="PRPHTCondorProvisioner")&&(K8SProvisionerName=?="%s")&&(K8SNamespace=?="%s")&&(K8SDomain=?="%s")'%(self.app_name,self.namespace,self.k8s_domain))
+      try:
+         slist=c.query(ad_type=htcondor.AdTypes.Startd,projection=full_projection,
+                       constraint='(K8SProvisionerType=?="PRPHTCondorProvisioner")&&(K8SProvisionerName=?="%s")&&(K8SNamespace=?="%s")&&(K8SDomain=?="%s")'%(self.app_name,self.namespace,self.k8s_domain))
+      except:
+         self.log_obj.log_debug("[ProvisionerCollector] Failed to retrieve HTCondor startd list")
+         raise
+
       for s in slist:
          try:
             sname=s['Name']
