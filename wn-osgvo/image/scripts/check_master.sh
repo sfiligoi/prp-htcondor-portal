@@ -6,7 +6,7 @@
 #   $2 is the wait time between checks
 #
 
-wait "$1"
+sleep "$1"
 
 awk '/CondorVersion/{split($3,a,":"); split(a[2],b,")"); print b[1]}' /pilot/log/MasterLog > /root/master_pids.txt
 npids=`cat /root/master_pids.txt | wc -l`
