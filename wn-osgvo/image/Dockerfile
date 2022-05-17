@@ -13,6 +13,9 @@ RUN mv /bin/entrypoint.sh /bin/entrypoint.osg.sh
 COPY scripts/entrypoint.sh /bin/entrypoint.sh
 RUN chmod a+rx /bin/entrypoint.sh
 
+COPY scripts/check_master.sh /bin/check_master.sh
+RUN chmod a+rx /bin/check_master.sh
+
 # system level scripts
 COPY scripts/01_token.sh /etc/entrypoint/image-config.d/01_token.sh
 COPY scripts/01_no_condor_host.sh /etc/entrypoint/image-config.d/01_no_condor_host.sh
@@ -23,6 +26,12 @@ COPY scripts/20_advertise_k8s_domain.sh /etc/osg/image-init.d/20_advertise_k8s_d
 COPY scripts/21_advertise_k8s_provisioner.sh  /etc/osg/image-init.d/21_advertise_k8s_provisioner.sh
 COPY scripts/22_set_requirements.sh /etc/osg/image-init.d/22_set_requirements.sh
 
+# keep default low, as we expect to be running in opportunistic mode
+env ACCEPT_JOBS_FOR_HOURS=24
+
+# keep default idle time low, as we may over-provision certain kinds of resources
+# but others may be waiting
+env ACCEPT_IDLE_MINUTES=20
 
 #
 # In addition to osgvo-docker-pilot envs,
