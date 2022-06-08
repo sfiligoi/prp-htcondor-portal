@@ -358,6 +358,7 @@ class ProvisionerK8S:
          podattrs['Name'] = pod.metadata.name
          podattrs['Phase'] = pod.status.phase
          podattrs['StartTime'] = pod.status.start_time
+         podattrs['HasContainers'] = pod.status.container_statuses!=None
          pods.append(podattrs)
       return
 

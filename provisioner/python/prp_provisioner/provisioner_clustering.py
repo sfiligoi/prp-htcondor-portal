@@ -96,12 +96,16 @@ class ProvisionerK8SCluster(ProvisionerCluster):
       self.pod_attrs = pod_attrs
       self.max_wait_onerror=max_wait_onerror  # in seconds
 
-   def count_unclaimed(self, max_wait_onerror=None):
+   def count_states(self, max_wait_onerror=None):
+      "Returns (unclaimed,claimed,failed,unknown) counts"
       if max_wait_onerror==None:
          max_wait_onerror=self.max_wait_onerror
 
       err_deadline = datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=max_wait_onerror)
-      cnt = 0
+      unclaimed_cnt = 0
+      claimed_cnt = 0
+      failed_cnt = 0
+      unknown_cnt = 0
       for el in self.elements:
          pod_el = el[0]
          phase="%s"%pod_el['Phase']
@@ -113,14 +117,22 @@ class ProvisionerK8SCluster(ProvisionerCluster):
               state = "None"
             # we will count all Running pods that are not yet claimed
             if state!="Claimed":
-              cnt+=1
+              unclaimed_cnt+=1
+            else:
+              claimed_cnt+=1
          elif phase=="Pending":
-            # we can safely count these at all times
-            cnt+=1
-         elif (phase=="Succeeded") or (phase=="Failed"):
+            # we can safely count these as unclaimed at all times
+            unclaimed_cnt+=1
+         elif (phase=="Succeeded"):
             # we can safely ignore these
             pass
+         elif (phase=="Failed"):
+            if pod_el['HasContainers']:
+               failed_cnt+=1
+            else:
+               unknown_cnt+=1
          else:
+            unknown_cnt+=1
             # All other states should be transitory
             # if not, they are problematic and should be ignored
             err_time = None
@@ -129,13 +141,18 @@ class ProvisionerK8SCluster(ProvisionerCluster):
             except:
                pass
             if (err_time==None):
-               # no good estimate, just count
-               cnt+=1
+               # no good estimate, just count as unclaimed
+               unclaimed_cnt+=1
+               unknown_cnt-=1
             elif err_time>err_deadline:
-               # assume it is transitory
-               cnt+=1
-            #else, this is unlikely to recover, ignore
-      return cnt
+               # assume it is transitory, count as unclaimed
+               unclaimed_cnt+=1
+               unknown_cnt-=1
+            #else, this is unlikely to recover, count as unknown
+      return (unclaimed_cnt,claimed_cnt,failed_cnt,unknown_cnt)
+
+   def count_unclaimed(self, max_wait_onerror=None):
+      return self.count_states(max_wait_onerror)[0]
 
 class ProvisionerClustering:
    def __init__(self):
