@@ -16,31 +16,37 @@ class ProvisionerEventLoop:
       self.k8s = k8s_obj
       self.max_pods_per_cluster = max_pods_per_cluster
 
-   def one_iteration(self):
+   def query_system(self):
       schedd_attrs = provisioner_clustering.ProvisionerClusteringAttributes().get_schedd_attributes()
       try:
          schedd_jobs = self.schedd.query_idle(projection=schedd_attrs)
          startd_pods = self.collector.query()
       except:
-         self.log_obj.log_error("[ProvisionerEventLoop] Failed to query HTCondor")
+         self.log_obj.log_error("[ProvisionerEventQuery] Failed to query HTCondor")
          self.log_obj.sync()
-         return
+         raise
       del schedd_attrs
 
       try:
          k8s_pods = self.k8s.query()
       except:
-         self.log_obj.log_error("[ProvisionerEventLoop] Failed to query k8s")
+         self.log_obj.log_error("[ProvisionerEventQuery] Failed to query k8s")
          self.log_obj.sync()
-         return
+         raise
 
       clustering = provisioner_clustering.ProvisionerClustering()
       schedd_clusters = clustering.cluster_schedd_jobs(schedd_jobs)
       k8s_clusters = clustering.cluster_k8s_pods(k8s_pods, startd_pods)
 
-      del schedd_jobs
-      del startd_pods
-      del k8s_pods
+      return (schedd_clusters, k8s_clusters)
+
+   def one_iteration(self):
+      try:
+        (schedd_clusters, k8s_clusters) = self.query_system()
+      except:
+         self.log_obj.log_error("[ProvisionerEventLoop] Failed to query")
+         self.log_obj.sync()
+         return
 
       all_clusters_set = set(schedd_clusters.keys())|set(k8s_clusters.keys())
       for ckey in all_clusters_set:
