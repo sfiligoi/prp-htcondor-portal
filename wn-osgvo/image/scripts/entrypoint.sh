@@ -18,4 +18,4 @@ wait ${myproc}
 rc=$?
 echo "`date` entrypoint.osg.sh terminated with $rc"
 
-exit 0
+exit $rc
