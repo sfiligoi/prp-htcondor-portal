@@ -347,7 +347,7 @@ class ProvisionerK8S:
 
       if len(self.additional_annotations.keys())!=0:
          # annotations are rare, so treat them explicitly here
-         body['metadata']['annotations'] = copy.deepcopy(self.additional_annotations)
+         body['spec']['template']['metadata']['annotations'] = copy.deepcopy(self.additional_annotations)
 
       k8s = kubernetes.client.BatchV1Api()
       k8s.create_namespaced_job(body=body, namespace=self.namespace)
