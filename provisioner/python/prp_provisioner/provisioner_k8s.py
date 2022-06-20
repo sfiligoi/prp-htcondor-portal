@@ -17,7 +17,7 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'k8s_image','k8s_image_pull_policy',
                               'priority_class','priority_class_cpu','priority_class_gpu',
                               'tolerations_list', 'node_selectors_dict', 'node_affinity_dict',
-                              'labels_dict', 'envs_dict', 'pvc_volumes_dict',
+                              'labels_dict', 'annotations_dict', 'envs_dict', 'pvc_volumes_dict',
                               'app_name','k8s_job_ttl','k8s_domain',
                               'force_k8s_namespace_matching',
                               'additional_requirements')
@@ -39,6 +39,7 @@ class ProvisionerK8SConfig:
                 additional_volumes = {},
                 additional_tolerations = [],
                 additional_node_selectors = {},
+                additional_annotations = {},
                 app_name = 'prp-wn',
                 k8s_job_ttl = 24*3600, # clean after 1 day
                 k8s_domain = 'optiputer.net',
@@ -75,6 +76,8 @@ class ProvisionerK8SConfig:
              Tolerations to add to the container
          additional_node_selectors: dictionary of strings (Optional)
              nodeSelectors to attach to the pod
+         additional_annotations: dictionary of strings (Optional)
+             Annotations to attach to the pod
          k8s_domain: string (Optional)
              Kubernetes domain to advertise
          node_affinity_dict: dictionary of node affinity (Optional)
@@ -96,6 +99,7 @@ class ProvisionerK8SConfig:
       self.additional_volumes = copy.deepcopy(additional_volumes)
       self.additional_tolerations = copy.deepcopy(additional_tolerations)
       self.additional_node_selectors = additional_node_selectors
+      self.additional_annotations = copy.deepcopy(additional_annotations)
       self.app_name = copy.deepcopy(app_name)
       self.k8s_job_ttl = k8s_job_ttl
       self.k8s_domain = copy.deepcopy(k8s_domain)
@@ -120,6 +124,7 @@ class ProvisionerK8SConfig:
       self.additional_labels = provisioner_config_parser.update_parse(self.additional_labels, 'labels_dict', 'dict', fields, dict)
       self.additional_envs = provisioner_config_parser.update_parse(self.additional_envs, 'envs_dict', 'dict', fields, dict)
       self.additional_node_selectors = provisioner_config_parser.update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
+      self.additional_annotations = provisioner_config_parser.update_parse(self.additional_annotations, 'annotations_dict', 'dict', fields, dict)
       self.app_name = provisioner_config_parser.update_parse(self.app_name, 'app_name', 'str', fields, dict)
       self.k8s_job_ttl = provisioner_config_parser.update_parse(self.k8s_job_ttl, 'k8s_job_ttl', 'int', fields, dict)
       self.force_k8s_namespace_matching = provisioner_config_parser.update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
@@ -149,6 +154,7 @@ class ProvisionerK8S:
       self.additional_volumes = copy.deepcopy(config.additional_volumes)
       self.additional_tolerations = copy.deepcopy(config.additional_tolerations)
       self.additional_node_selectors = copy.deepcopy(config.additional_node_selectors)
+      self.additional_annotations = copy.deepcopy(config.additional_annotations)
       self.k8s_domain = copy.deepcopy(config.k8s_domain)
       self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
       self.additional_requirements = copy.deepcopy(config.additional_requirements)
@@ -338,6 +344,10 @@ class ProvisionerK8S:
 
       if priority_class!=None:
          body['spec']['template']['spec']['priorityClassName'] = priority_class
+
+      if len(self.additional_annotations.keys())!=0:
+         # annotations are rare, so treat them explicitly here
+         body['metadata']['annotations'] = copy.deepcopy(self.additional_annotations)
 
       k8s = kubernetes.client.BatchV1Api()
       k8s.create_namespaced_job(body=body, namespace=self.namespace)
