@@ -67,6 +67,10 @@ class ProvisionerCluster:
    def append(self, el):
       self.elements.append(el)
 
+   def append_list(self, ellist):
+      for el in ellist:
+        self.elements.append(el)
+
    def get_attr_dict(self):
       p=ProvisionerClusteringAttributes()
       attrs={}
