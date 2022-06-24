@@ -101,15 +101,17 @@ class ProvisionerK8SCluster(ProvisionerCluster):
       self.max_wait_onerror=max_wait_onerror  # in seconds
 
    def count_states(self, max_wait_onerror=None):
-      "Returns (unclaimed,claimed,failed,unknown) counts"
+      "Returns (waiting,unmatched,claimed,failed,unknown) counts"
+      waiting_cnt = 0
+      unmatched_cnt = 0
+      claimed_cnt = 0
+      failed_cnt = 0
+      unknown_cnt = 0
+
       if max_wait_onerror==None:
          max_wait_onerror=self.max_wait_onerror
 
       err_deadline = datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=max_wait_onerror)
-      unclaimed_cnt = 0
-      claimed_cnt = 0
-      failed_cnt = 0
-      unknown_cnt = 0
       for el in self.elements:
          pod_el = el[0]
          phase="%s"%pod_el['Phase']
@@ -120,13 +122,15 @@ class ProvisionerK8SCluster(ProvisionerCluster):
             else:
               state = "None"
             # we will count all Running pods that are not yet claimed
-            if state!="Claimed":
-              unclaimed_cnt+=1
+            if state=="None":
+              waiting_cnt+=1
+            elif state!="Claimed":
+              unmatched_cnt+=1
             else:
               claimed_cnt+=1
          elif phase=="Pending":
-            # we can safely count these as unclaimed at all times
-            unclaimed_cnt+=1
+            # we can safely count these as waiting at all times
+            waiting_cnt+=1
          elif (phase=="Succeeded"):
             # we can safely ignore these
             pass
@@ -145,18 +149,20 @@ class ProvisionerK8SCluster(ProvisionerCluster):
             except:
                pass
             if (err_time==None):
-               # no good estimate, just count as unclaimed
-               unclaimed_cnt+=1
+               # no good estimate, just count as waiting
+               waiting_cnt+=1
                unknown_cnt-=1
             elif err_time>err_deadline:
-               # assume it is transitory, count as unclaimed
-               unclaimed_cnt+=1
+               # assume it is transitory, count as waiting
+               waiting_cnt+=1
                unknown_cnt-=1
             #else, this is unlikely to recover, count as unknown
-      return (unclaimed_cnt,claimed_cnt,failed_cnt,unknown_cnt)
+      return (waiting_cnt,unmatched_cnt,claimed_cnt,failed_cnt,unknown_cnt)
 
    def count_unclaimed(self, max_wait_onerror=None):
-      return self.count_states(max_wait_onerror)[0]
+      (waiting_cnt,unmatched_cnt,claimed_cnt,failed_cnt,unknown_cnt)=self.count_states(max_wait_onerror)
+      # "logically unclaimed" = waiting+"running unmatched"
+      return waiting_cnt+unmatched_cnt
 
 class ProvisionerClustering:
    def __init__(self):

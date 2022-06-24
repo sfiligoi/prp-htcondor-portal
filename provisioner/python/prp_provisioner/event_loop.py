@@ -9,12 +9,13 @@
 from . import provisioner_clustering
 
 class ProvisionerEventLoop:
-   def __init__(self, log_obj, schedd_obj, collector_obj, k8s_obj, max_pods_per_cluster):
+   def __init__(self, log_obj, schedd_obj, collector_obj, k8s_obj, max_pods_per_cluster, max_submit_pods_per_cluster):
       self.log_obj = log_obj
       self.schedd = schedd_obj
       self.collector = collector_obj
       self.k8s = k8s_obj
       self.max_pods_per_cluster = max_pods_per_cluster
+      self.max_submit_pods_per_cluster = max_submit_pods_per_cluster
 
    def query_system(self):
       schedd_attrs = provisioner_clustering.ProvisionerClusteringAttributes().get_schedd_attributes()
@@ -85,9 +86,19 @@ class ProvisionerEventLoop:
       if min_pods>self.max_pods_per_cluster:
          min_pods = self.max_pods_per_cluster
 
-      n_pods_unclaimed = k8s_cluster.count_unclaimed() if k8s_cluster!=None else 0
-      self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i"%
-                             (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods))
+      n_pods_statearr=k8s_cluster.count_states() if k8s_cluster!=None else (0,0,0,0,0)
+      n_pods_waiting=n_pods_statearr[0]
+      n_pods_unmatched=n_pods_statearr[1]
+      n_pods_claimed=n_pods_statearr[2]
+      n_pods_unclaimed = n_pods_waiting+n_pods_unmatched
+      n_pods_total = n_pods_unclaimed+n_pods_claimed
+
+      if n_pods_total>=self.max_submit_pods_per_cluster:
+         min_pods = 0
+
+      self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i max %i)"%
+                             (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, self.max_submit_pods_per_cluster))
+
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
          # we may want to do some sanity checks here, eventually
