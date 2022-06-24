@@ -87,7 +87,7 @@ class ProvisionerEventLoop:
         self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i max %i)"%
                                (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, self.max_submit_pods_per_cluster))
 
-      return min_pods
+      return (min_pods,n_pods_unclaimed)
 
    def _report_cluster(self, cluster_id, k8s_cluster):
       self._check_and_report_cluster(cluster_id, k8s_cluster, 0, 0)
@@ -108,7 +108,7 @@ class ProvisionerEventLoop:
       if min_pods>self.max_pods_per_cluster:
          min_pods = self.max_pods_per_cluster
 
-      min_pods = self._check_and_report_cluster(cluster_id, k8s_cluster, n_jobs_idle, min_pods)
+      (min_pods,n_pods_unclaimed) = self._check_and_report_cluster(cluster_id, k8s_cluster, n_jobs_idle, min_pods)
 
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
