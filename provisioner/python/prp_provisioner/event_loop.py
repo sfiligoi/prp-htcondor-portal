@@ -52,12 +52,12 @@ class ProvisionerEventLoop:
       all_clusters_set = set(schedd_clusters.keys())|set(k8s_clusters.keys())
       for ckey in all_clusters_set:
          try:
+            k8s_cluster = k8s_clusters[ckey] if ckey in k8s_clusters else None
             if ckey in schedd_clusters:
-               self._provision_cluster(ckey, schedd_clusters[ckey], k8s_clusters[ckey] if ckey in k8s_clusters else None )
+               self._provision_cluster(ckey, schedd_clusters[ckey], k8s_cluster )
             else:
                # we have k8s cluster, but no condor jobs
-               self.log_obj.log_debug("[ProvisionerEventLoop] Unhandled k8s cluster '%s' found"%ckey)
-               pass # noop for now, may eventually do something
+               self._report_cluster(ckey, k8s_cluster)
          except:
             self.log_obj.log_debug("[ProvisionerEventLoop] Exception in cluster '%s'"%ckey)
 
@@ -70,6 +70,28 @@ class ProvisionerEventLoop:
 
 
    # INTERNAL
+   def _check_and_report_cluster(self, cluster_id, k8s_cluster, n_jobs_idle, min_pods):
+      "Check if we have enough pods already, and also report"
+      n_pods_statearr=k8s_cluster.count_states() if k8s_cluster!=None else (0,0,0,0,0)
+      n_pods_waiting=n_pods_statearr[0]
+      n_pods_unmatched=n_pods_statearr[1]
+      n_pods_claimed=n_pods_statearr[2]
+      n_pods_unclaimed = n_pods_waiting+n_pods_unmatched
+      n_pods_total = n_pods_unclaimed+n_pods_claimed
+
+      if n_pods_total>=self.max_submit_pods_per_cluster:
+         min_pods = 0
+
+      if (n_jobs_idle+n_pods_unclaimed+min_pods+n_pods_waiting+n_pods_unmatched+n_pods_claimed)>0:
+        # do not report all zeros (e.g. only completed pods in the system)
+        self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i max %i)"%
+                               (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, self.max_submit_pods_per_cluster))
+
+      return min_pods
+
+   def _report_cluster(self, cluster_id, k8s_cluster):
+      self._check_and_report_cluster(cluster_id, k8s_cluster, 0, 0)
+
    def _provision_cluster(self, cluster_id, schedd_cluster, k8s_cluster):
       "Check if we have enough k8s clusters. Submit more if needed"
       n_jobs_idle = schedd_cluster.count_idle()
@@ -86,18 +108,7 @@ class ProvisionerEventLoop:
       if min_pods>self.max_pods_per_cluster:
          min_pods = self.max_pods_per_cluster
 
-      n_pods_statearr=k8s_cluster.count_states() if k8s_cluster!=None else (0,0,0,0,0)
-      n_pods_waiting=n_pods_statearr[0]
-      n_pods_unmatched=n_pods_statearr[1]
-      n_pods_claimed=n_pods_statearr[2]
-      n_pods_unclaimed = n_pods_waiting+n_pods_unmatched
-      n_pods_total = n_pods_unclaimed+n_pods_claimed
-
-      if n_pods_total>=self.max_submit_pods_per_cluster:
-         min_pods = 0
-
-      self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i max %i)"%
-                             (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, self.max_submit_pods_per_cluster))
+      min_pods = self._check_and_report_cluster(cluster_id, k8s_cluster, n_jobs_idle, min_pods)
 
       if n_pods_unclaimed>=min_pods:
          pass # we have enough pods, do nothing for now
