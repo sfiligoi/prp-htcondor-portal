@@ -39,6 +39,9 @@ ADD profile.d/cudalib.sh /etc/profile.d/
 ADD scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
 RUN mv /usr/bin/singularity /usr/bin/singularity.org
 
+ADD scripts/apptainer_npid.sh /usr/bin/apptainer_npid.sh
+RUN mv /usr/bin/apptainer /usr/bin/apptainer.org
+
 ADD condor.d/* /etc/condor/config.d/
 
 ADD scripts/container_startup.sh /usr/sbin/container_startup.sh
