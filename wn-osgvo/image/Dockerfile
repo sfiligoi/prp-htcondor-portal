@@ -7,6 +7,11 @@ RUN mv /usr/bin/singularity /usr/bin/singularity.org && \
     chmod a+x /usr/bin/singularity_npid.sh && \
     ln -s /usr/bin/singularity_npid.sh /usr/bin/singularity
 
+COPY scripts/apptainer_npid.sh /usr/bin/apptainer_npid.sh
+RUN mv /usr/bin/apptainer /usr/bin/apptainer.org && \
+    chmod a+x /usr/bin/apptainer_npid.sh && \
+    ln -s /usr/bin/apptainer_npid.sh /usr/bin/apptainer
+
 # We want to be able to add system-level changes
 # and run without explicit privilege drop
 RUN mv /bin/entrypoint.sh /bin/entrypoint.osg.sh
@@ -22,6 +27,7 @@ COPY scripts/01_no_condor_host.sh /etc/entrypoint/image-config.d/01_no_condor_ho
 
 # pilot level scripts
 COPY scripts/02_validate_singularity.sh /etc/osg/image-init.d/02_validate_singularity.sh 
+COPY scripts/02_validate_apptainer.sh /etc/osg/image-init.d/02_validate_apptainer.sh 
 COPY scripts/19_set_resources.sh /etc/osg/image-init.d/19_set_resources.sh
 COPY scripts/20_advertise_k8s_domain.sh /etc/osg/image-init.d/20_advertise_k8s_domain.sh
 COPY scripts/21_advertise_k8s_provisioner.sh  /etc/osg/image-init.d/21_advertise_k8s_provisioner.sh
