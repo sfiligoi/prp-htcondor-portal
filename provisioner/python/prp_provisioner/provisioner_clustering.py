@@ -131,6 +131,9 @@ class ProvisionerK8SCluster(ProvisionerCluster):
          elif phase=="Pending":
             # we can safely count these as waiting at all times
             waiting_cnt+=1
+         elif (phase=="Terminating"):
+            # we can safely ignore these
+            pass
          elif (phase=="Succeeded"):
             # we can safely ignore these
             pass
