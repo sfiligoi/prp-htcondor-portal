@@ -20,6 +20,7 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'labels_dict', 'annotations_dict', 'envs_dict', 'pvc_volumes_dict',
                               'app_name','k8s_job_ttl','k8s_domain',
                               'force_k8s_namespace_matching',
+                              'request_fuse','storage_mbs','resources_dict',
                               'additional_requirements')
 
 class ProvisionerK8SConfig:
@@ -106,6 +107,9 @@ class ProvisionerK8SConfig:
       self.force_k8s_namespace_matching = copy.deepcopy(force_k8s_namespace_matching)
       self.additional_requirements = copy.deepcopy(additional_requirements)
       self.node_affinity_dict = copy.deepcopy(node_affinity_dict)
+      self.request_fuse = "yes"
+      self.storage_mbs = "20000"
+      self.additional_resources = {}
 
    def parse(self,
              dict,
@@ -130,6 +134,9 @@ class ProvisionerK8SConfig:
       self.force_k8s_namespace_matching = provisioner_config_parser.update_parse(self.force_k8s_namespace_matching, 'force_k8s_namespace_matching', 'str', fields, dict)
       self.additional_requirements = provisioner_config_parser.update_parse(self.additional_requirements, 'additional_requirements', 'str', fields, dict)
       self.node_affinity_dict = provisioner_config_parser.update_parse(self.node_affinity_dict, 'node_affinity_dict', 'dict', fields, dict)
+      self.request_fuse = provisioner_config_parser.update_parse(self.request_fuse, 'request_fuse', 'str', fields, dict)
+      self.storage_mbs = provisioner_config_parser.update_parse(self.storage_mbs, 'storage_mbs', 'str', fields, dict)
+      self.additional_resources = provisioner_config_parser.update_parse(self.additional_resources, 'resources_dict', 'dict', fields, dict)
 
 class ProvisionerK8S:
    """Kubernetes Query interface"""
@@ -159,6 +166,9 @@ class ProvisionerK8S:
       self.force_k8s_namespace_matching = copy.deepcopy(config.force_k8s_namespace_matching)
       self.additional_requirements = copy.deepcopy(config.additional_requirements)
       self.node_affinity_dict = copy.deepcopy(config.node_affinity_dict)
+      self.request_fuse = copy.deepcopy(config.request_fuse)
+      self.storage_mbs = copy.deepcopy(config.storage_mbs)
+      self.additional_resources = copy.deepcopy(config.additional_resources)
       return
 
    def authenticate(self, use_service_account=True):
@@ -204,7 +214,7 @@ class ProvisionerK8S:
       self._augment_labels(labels, attrs)
 
       # CPU is hardly ever used 100%... request 75%
-      # Similarly for memry, but request 80% there
+      # Similarly for memory, but request 80% there
       req = {
                'memory':  '%iMi'%int(int_vals['Memory']*0.8),
                'cpu':            (int_vals['CPUs']*0.75),
@@ -216,7 +226,19 @@ class ProvisionerK8S:
                'cpu':            (int_vals['CPUs']+0.25),
                'nvidia.com/gpu': int_vals['GPUs']
             }
-      #TODO: Request Ephemeral storage
+
+      if self.request_fuse != "no":
+         req['smarter-devices/fuse'] = "1"
+         lim['smarter-devices/fuse'] = "1"
+
+      if self.storage_mbs != "":
+         req['ephemeral-storage'] = '%iMi'%int(self.storage_mbs)
+         lim['ephemeral-storage'] = '%iMi'%int(self.storage_mbs)
+
+      for k in self.additional_resources.keys():
+         req[k] = copy.copy(self.additional_resources[k])
+         lim[k] = copy.copy(self.additional_resources[k])
+
       env_list = [ ('K8S_PROVISIONER_TYPE', 'PRPHTCondorProvisioner'),
                    ('K8S_PROVISIONER_NAME', self.app_name),
                    ('CONDOR_HOST', self.condor_host),
