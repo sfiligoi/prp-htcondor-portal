@@ -17,7 +17,8 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'k8s_image','k8s_image_pull_policy',
                               'priority_class','priority_class_cpu','priority_class_gpu',
                               'tolerations_list', 'node_selectors_dict', 'node_affinity_dict',
-                              'labels_dict', 'annotations_dict', 'envs_dict', 'pvc_volumes_dict',
+                              'labels_dict', 'annotations_dict', 'envs_dict',
+                              'pvc_volumes_dict', 'config_volumes_dict',
                               'app_name','k8s_job_ttl','k8s_domain',
                               'force_k8s_namespace_matching',
                               'request_fuse','storage_mbs','resources_dict',
@@ -95,6 +96,7 @@ class ProvisionerK8SConfig:
       self.priority_class_gpu = copy.deepcopy(priority_class_gpu)
       self.base_tolerations = copy.deepcopy(base_tolerations)
       self.base_pvc_volumes = copy.deepcopy(base_pvc_volumes)
+      self.base_config_volumes = copy.deepcopy(base_config_volumes)
       self.additional_labels = copy.deepcopy(additional_labels)
       self.additional_envs = copy.deepcopy(additional_envs)
       self.additional_volumes = copy.deepcopy(additional_volumes)
@@ -125,6 +127,7 @@ class ProvisionerK8SConfig:
       self.priority_class_gpu = provisioner_config_parser.update_parse(self.priority_class_gpu, 'priority_class_gpu', 'str', fields, dict)
       self.base_tolerations = provisioner_config_parser.update_parse(self.base_tolerations, 'tolerations_list', 'list', fields, dict)
       self.base_pvc_volumes = provisioner_config_parser.update_parse(self.base_pvc_volumes, 'pvc_volumes_dict', 'dict', fields, dict)
+      self.base_config_volumes = provisioner_config_parser.update_parse(self.base_config_volumes, 'config_volumes_dict', 'dict', fields, dict)
       self.additional_labels = provisioner_config_parser.update_parse(self.additional_labels, 'labels_dict', 'dict', fields, dict)
       self.additional_envs = provisioner_config_parser.update_parse(self.additional_envs, 'envs_dict', 'dict', fields, dict)
       self.additional_node_selectors = provisioner_config_parser.update_parse(self.additional_node_selectors, 'node_selectors_dict', 'dict', fields, dict)
@@ -156,6 +159,7 @@ class ProvisionerK8S:
       self.priority_class_gpu = copy.deepcopy(config.priority_class_gpu)
       self.base_tolerations = copy.deepcopy(config.base_tolerations)
       self.base_pvc_volumes = copy.deepcopy(config.base_pvc_volumes)
+      self.base_config_volumes = copy.deepcopy(config.base_config_volumes)
       self.additional_labels = copy.deepcopy(config.additional_labels)
       self.additional_envs = copy.deepcopy(config.additional_envs)
       self.additional_volumes = copy.deepcopy(config.additional_volumes)
@@ -428,6 +432,26 @@ class ProvisionerK8S:
                       },
                       {
                          'mountPath': self.base_pvc_volumes[v]
+                      }
+                   )
+
+      for v in self.base_config_volumes:
+         path = self.base_config_volumes[v]
+         fname = path.rsplit("/")[-1]
+         volumes[v] = \
+                   (
+                      {
+                         'configMap': {
+                            'name': v,
+                            'items': [{
+                                'key': fname,
+                                'path': fname
+                            }]
+                         }
+                      },
+                      {
+                         'mountPath': path,
+                         'subPath': fname
                       }
                    )
 
