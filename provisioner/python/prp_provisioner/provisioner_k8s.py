@@ -96,7 +96,7 @@ class ProvisionerK8SConfig:
       self.priority_class_gpu = copy.deepcopy(priority_class_gpu)
       self.base_tolerations = copy.deepcopy(base_tolerations)
       self.base_pvc_volumes = copy.deepcopy(base_pvc_volumes)
-      self.base_config_volumes = copy.deepcopy(base_config_volumes)
+      self.base_config_volumes = {}
       self.additional_labels = copy.deepcopy(additional_labels)
       self.additional_envs = copy.deepcopy(additional_envs)
       self.additional_volumes = copy.deepcopy(additional_volumes)
