@@ -9,7 +9,7 @@ RUN yum -y install less which \
                    osg-wn-client \
                    redhat-lsb-core && \
     yum -y install singularity && \
-    yum -y install condor && \
+    yum -y install condor condor-stash-plugin && \
     yum clean all
 
 # Enable OpenCL
