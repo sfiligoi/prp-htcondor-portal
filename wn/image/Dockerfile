@@ -8,7 +8,7 @@ RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-
 RUN yum -y install less which \
                    osg-wn-client \
                    redhat-lsb-core && \
-    yum -y install singularity && \
+    yum -y install apptainer && \
     yum -y install condor condor-stash-plugin && \
     yum clean all
 
@@ -37,7 +37,7 @@ ADD profile.d/cudalib.sh /etc/profile.d/
 # Tweaked singularity for container environments
 # Remove default singularity from path, too
 ADD scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
-RUN mv /usr/bin/singularity /usr/bin/singularity.org
+RUN if [ -f /usr/bin/singularity ]; then mv /usr/bin/singularity /usr/bin/singularity.org; fi
 
 ADD scripts/apptainer_npid.sh /usr/bin/apptainer_npid.sh
 RUN mv /usr/bin/apptainer /usr/bin/apptainer.org
