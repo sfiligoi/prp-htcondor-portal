@@ -423,6 +423,26 @@ class ProvisionerK8S:
       """Add any additional (volume,mount) pair to the dictionary (attrs is read-only)"""
 
       for v in self.base_pvc_volumes:
+         # Special characters in the volume path
+         #  ! - read only
+         #  # - HostToContainer mountPropagation
+         mro=False
+         mhp=False
+         mpath = self.base_pvc_volumes[v]
+         while mpath[0] in ('!','#'):
+            sc = mpath[0]
+            mpath = mpath[1:]
+            mro |= (sc=='!')
+            mhp |= (sc=='#')
+
+         vdict = {
+                         'mountPath': mpath
+                 }
+         if mro:
+            vdict['readOnly'] = True
+         if mhp:
+            vdict['mountPropagation'] = 'HostToContainer'
+
          volumes[v] = \
                    (
                       {
@@ -430,9 +450,7 @@ class ProvisionerK8S:
                             'claimName': v
                          }
                       },
-                      {
-                         'mountPath': self.base_pvc_volumes[v]
-                      }
+                      vdict
                    )
 
       for v in self.base_config_volumes:

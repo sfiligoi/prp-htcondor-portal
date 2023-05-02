@@ -82,16 +82,26 @@ class ProvisionerSchedd:
       jobs=[]
 
       sobjs=self._get_schedd_objs()
+      ok_schedds=0
+      bad_schedds=0
       for sclassad in sobjs:
          s=htcondor.Schedd(sclassad)
          sname=sclassad['Name']
+         have_myjobs=False
          try:
             myjobs=s.xquery(query_str, full_projection)
+            have_myjobs=True
          except:
             self.log_obj.log_debug("[ProvisionerSchedd] Failed to query HTCondor schedd '%s'"%sname)
-            raise
+            bad_schedds = bad_schedds + 1
 
-         self._append_jobs(sname, jobs, myjobs)
+         if have_myjobs:
+           ok_schedds = ok_schedds + 1
+           self._append_jobs(sname, jobs, myjobs)
+
+      if (bad_schedds>0) and (ok_schedds==0):
+         # only raise here if all the schedds have failed
+         raise Exception("[ProvisionerSchedd] All HTCondor schedds failed")
 
       return jobs
 
