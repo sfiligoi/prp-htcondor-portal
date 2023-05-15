@@ -5,11 +5,11 @@ RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-
     yum -y install epel-release \
                    yum-plugin-priorities
 
-RUN yum -y install less which \
+RUN yum -y install -enablerepo=osg-testing less which \
                    osg-wn-client \
                    redhat-lsb-core && \
     yum -y install apptainer && \
-    yum -y install condor condor-stash-plugin && \
+    yum -y install -enablerepo=osg-testing condor condor-stash-plugin && \
     yum clean all
 
 # Enable OpenCL
