@@ -234,15 +234,14 @@ class ProvisionerK8S:
                'cpu':            (int_vals['CPUs']+0.25)
             }
       else:
-         # Stick to the needs
+         # Stick to the needs, with just small memory delta
          req = {
-               'memory':  '%iMi'%int_vals['Memory'],
+               'memory':  '%iMi'%(int_vals['Memory']+1000),
                'cpu':     int_vals['CPUs']
             }
-         # Add just a bit for condor overhead
          lim = {
-               'memory':  '%iMi'%(int_vals['Memory']+250),
-               'cpu':            (int_vals['CPUs']+0.05)
+               'memory':  '%iMi'%(int_vals['Memory']+1000),
+               'cpu':     int_vals['CPUs']
             }
 
       if int_vals['GPUs']>0:
