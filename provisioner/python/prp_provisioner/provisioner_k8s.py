@@ -22,7 +22,8 @@ ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'app_name','k8s_job_ttl','k8s_domain',
                               'force_k8s_namespace_matching',
                               'request_fuse','storage_mbs','resources_dict',
-                              'additional_requirements')
+                              'additional_requirements',
+                              'use_large_limit')
 
 class ProvisionerK8SConfig:
    """Config fie for ProvisionerK8S"""
@@ -112,6 +113,7 @@ class ProvisionerK8SConfig:
       self.request_fuse = "yes"
       self.storage_mbs = "20000"
       self.additional_resources = {}
+      self.use_large_limit = "yes"
 
    def parse(self,
              dict,
@@ -140,6 +142,7 @@ class ProvisionerK8SConfig:
       self.request_fuse = provisioner_config_parser.update_parse(self.request_fuse, 'request_fuse', 'str', fields, dict)
       self.storage_mbs = provisioner_config_parser.update_parse(self.storage_mbs, 'storage_mbs', 'str', fields, dict)
       self.additional_resources = provisioner_config_parser.update_parse(self.additional_resources, 'resources_dict', 'dict', fields, dict)
+      self.use_large_limit = provisioner_config_parser.update_parse(self.use_large_limit, 'use_large_limit', 'str', fields, dict)
 
 class ProvisionerK8S:
    """Kubernetes Query interface"""
@@ -173,6 +176,7 @@ class ProvisionerK8S:
       self.request_fuse = copy.deepcopy(config.request_fuse)
       self.storage_mbs = copy.deepcopy(config.storage_mbs)
       self.additional_resources = copy.deepcopy(config.additional_resources)
+      self.use_large_limit = copy.deepcopy(config.use_large_limit)
       return
 
    def authenticate(self, use_service_account=True):
@@ -217,19 +221,33 @@ class ProvisionerK8S:
          labels[k] = copy.copy(self.additional_labels[k])
       self._augment_labels(labels, attrs)
 
-      # CPU is hardly ever used 100%... request 75%
-      # Similarly for memory, but request 80% there
-      req = {
+      if self.use_large_limit == "yes":
+         # CPU is hardly ever used 100%... request 75%
+         # Similarly for memory, but request 80% there
+         req = {
                'memory':  '%iMi'%int(int_vals['Memory']*0.8),
-               'cpu':            (int_vals['CPUs']*0.75),
-               'nvidia.com/gpu': int_vals['GPUs']
+               'cpu':            (int_vals['CPUs']*0.75)
             }
-      # but enforce CPU limit + delta
-      lim = {
+         # but enforce Memory limit + delta
+         lim = {
                'memory':  '%iMi'%(int_vals['Memory']+1000),
-               'cpu':            (int_vals['CPUs']+0.25),
-               'nvidia.com/gpu': int_vals['GPUs']
+               'cpu':            (int_vals['CPUs']+0.25)
             }
+      else:
+         # Stick to the needs
+         req = {
+               'memory':  '%iMi'%int_vals['Memory'],
+               'cpu':     int_vals['CPUs']
+            }
+         # Add just a bit for condor overhead
+         lim = {
+               'memory':  '%iMi'%(int_vals['Memory']+250),
+               'cpu':            (int_vals['CPUs']+0.05)
+            }
+
+      if int_vals['GPUs']>0:
+         req['nvidia.com/gpu'] = int_vals['GPUs']
+         lim['nvidia.com/gpu'] = int_vals['GPUs']
 
       if self.request_fuse != "no":
          req['smarter-devices/fuse'] = "1"
