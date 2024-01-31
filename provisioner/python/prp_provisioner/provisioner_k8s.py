@@ -252,15 +252,16 @@ class ProvisionerK8S:
          req['smarter-devices/fuse'] = "1"
          lim['smarter-devices/fuse'] = "1"
 
+      eph_storage = int_vals['Disk']
       if self.storage_mbs != "":
          # many jobs do not define reasonable Disk requests
          # keep a reasonable minimum
          min_disk = int(self.storage_mbs)*1024
-         if int_vals['Disk']<min_disk:
-            int_vals['Disk'] = min_disk
+         if eph_storage<min_disk:
+            eph_storage = min_disk
 
-      req['ephemeral-storage'] = '%ik'%int_vals['Disk']
-      lim['ephemeral-storage'] = '%ik'%int_vals['Disk']
+      req['ephemeral-storage'] = '%ik'%eph_storage
+      lim['ephemeral-storage'] = '%ik'%eph_storage
 
       for k in self.additional_resources.keys():
          req[k] = copy.copy(self.additional_resources[k])
