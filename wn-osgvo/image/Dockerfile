@@ -9,9 +9,9 @@ RUN mv /usr/bin/singularity /usr/bin/singularity.org && \
 
 # We want to be able to add system-level changes
 # and run without explicit privilege drop
-RUN mv /bin/entrypoint.sh /bin/entrypoint.osg.sh
-COPY scripts/entrypoint.sh /bin/entrypoint.sh
-RUN chmod a+rx /bin/entrypoint.sh
+RUN mv /usr/local/sbin/entrypoint.sh /usr/local/sbin/entrypoint.osg.sh
+COPY scripts/entrypoint.sh /usr/local/sbin/entrypoint.sh
+RUN chmod a+rx /usr/local/sbin/entrypoint.sh
 
 COPY scripts/check_master.sh /bin/check_master.sh
 RUN chmod a+rx /bin/check_master.sh

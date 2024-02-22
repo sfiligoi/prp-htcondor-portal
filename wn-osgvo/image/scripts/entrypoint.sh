@@ -7,7 +7,7 @@ for x in /etc/entrypoint/image-config.d/*.sh; do source "$x"; done
 trap 'echo signal received!; kill $(jobs -p); wait' SIGINT SIGTERM
 
 export HOME=/pilot
-su osg -p -c "/bin/entrypoint.osg.sh $@" &
+su osg -p -c "/usr/local/sbin/entrypoint.osg.sh $@" &
 myproc=$!
 
 # protection in case it does not terminate oby itself when condor dies or restarts
