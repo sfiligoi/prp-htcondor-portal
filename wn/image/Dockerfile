@@ -1,7 +1,7 @@
 FROM nvidia/cuda:12.1.0-base-rockylinux8
 
 # OSG RPMs
-RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el9-release-latest.rpm && \
+RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el8-release-latest.rpm && \
     yum -y install epel-release
 
 RUN yum -y install less which procps-ng bind-utils \
