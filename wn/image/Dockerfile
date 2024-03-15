@@ -5,8 +5,7 @@ RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el9-
     yum -y install epel-release
 
 RUN yum -y install less which \
-                   osg-wn-client \
-                   redhat-lsb-core && \
+                   osg-wn-client &&\
     yum -y install apptainer && \
     yum -y install condor condor-stash-plugin && \
     yum clean all
