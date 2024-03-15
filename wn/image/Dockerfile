@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-base-rockylinux9
+FROM nvidia/cuda:12.1.0-base-rockylinux8
 
 # OSG RPMs
 RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el9-release-latest.rpm && \
