@@ -1,11 +1,13 @@
-FROM nvidia/cuda:12.1.0-base-rockylinux8
+FROM nvidia/cuda:11.0.3-base-centos7
 
 # OSG RPMs
-RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el8-release-latest.rpm && \
-    yum -y install epel-release
+RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-latest.rpm && \
+    yum -y install epel-release \
+                   yum-plugin-priorities
 
-RUN yum -y install less which procps-ng bind-utils \
-                   osg-wn-client &&\
+RUN yum -y install less which \
+                   osg-wn-client \
+                   redhat-lsb-core && \
     yum -y install apptainer && \
     yum -y install condor condor-stash-plugin && \
     yum clean all
@@ -23,13 +25,11 @@ RUN yum install -y clinfo && \
 # Suggested RPMs from https://hub.docker.com/r/opensciencegrid/osgvo-el7/dockerfile
 # At least one IceCube job types need freetype
 # attr needed by CVMFS checks
-RUN yum -y groupinstall "Development Tools" \
+RUN yum -y groupinstall "Compatibility Libraries" \
+                        "Development Tools" \
                         "Scientific Support" && \
     yum install -y freetype && \
     yum -y install attr && yum clean all
-
-# Set python to be python3
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 # Condor does not pick up the system libraries
 ADD profile.d/cudalib.sh /etc/profile.d/
