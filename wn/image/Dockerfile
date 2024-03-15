@@ -4,7 +4,7 @@ FROM nvidia/cuda:12.1.0-base-rockylinux9
 RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el9-release-latest.rpm && \
     yum -y install epel-release
 
-RUN yum -y install less which \
+RUN yum -y install less which procps-ng bind-utils \
                    osg-wn-client &&\
     yum -y install apptainer && \
     yum -y install condor condor-stash-plugin && \
