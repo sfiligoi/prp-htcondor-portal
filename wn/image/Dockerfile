@@ -28,6 +28,9 @@ RUN yum -y groupinstall "Development Tools" \
     yum install -y freetype && \
     yum -y install attr && yum clean all
 
+# Set python to be python3
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
 # Condor does not pick up the system libraries
 ADD profile.d/cudalib.sh /etc/profile.d/
 
