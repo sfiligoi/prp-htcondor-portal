@@ -1,4 +1,4 @@
-FROM opensciencegrid/osgvo-docker-pilot:3.6-release
+FROM opensciencegrid/osgvo-docker-pilot:23-release
 
 # Tweaked singularity for container environments
 # Remove default singularity from path, too
