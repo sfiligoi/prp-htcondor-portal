@@ -1,9 +1,8 @@
-FROM nvidia/cuda:11.0.3-base-centos7
+FROM nvidia/cuda:12.1.0-base-rockylinux9
 
 # OSG RPMs
-RUN yum -y install https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el7-release-latest.rpm && \
-    yum -y install epel-release \
-                   yum-plugin-priorities
+RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el9-release-latest.rpm && \
+    yum -y install epel-release
 
 RUN yum -y install less which \
                    osg-wn-client \
