@@ -1,5 +1,8 @@
 FROM opensciencegrid/osgvo-docker-pilot:23-el9-release
 
+# Fix python vs python3
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+
 # Tweaked singularity for container environments
 # Remove default singularity from path, too
 COPY scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
