@@ -32,6 +32,7 @@ COPY scripts/01_no_condor_host.sh /etc/entrypoint/image-config.d/01_no_condor_ho
 COPY scripts/02_validate_singularity.sh /etc/osg/image-init.d/02_validate_singularity.sh 
 COPY scripts/02_validate_apptainer.sh /etc/osg/image-init.d/02_validate_apptainer.sh 
 COPY scripts/19_set_resources.sh /etc/osg/image-init.d/19_set_resources.sh
+COPY scripts/20_advertise_glidein.sh /etc/osg/image-init.d/20_advertise_glidein.sh
 COPY scripts/20_advertise_k8s_domain.sh /etc/osg/image-init.d/20_advertise_k8s_domain.sh
 COPY scripts/21_advertise_k8s_provisioner.sh  /etc/osg/image-init.d/21_advertise_k8s_provisioner.sh
 COPY scripts/22_set_requirements.sh /etc/osg/image-init.d/22_set_requirements.sh
