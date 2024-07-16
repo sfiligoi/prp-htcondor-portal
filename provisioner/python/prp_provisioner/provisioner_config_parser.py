@@ -8,15 +8,28 @@
 
 import copy
 
+def encode_el(v):
+  # need a way to propagate : and ,
+  while v.find("&colon;")>=0:
+    v=v.replace("&colon;",":")
+  while v.find("&comma;")>=0:
+    v=v.replace("&comma;",",")
+  while v.find("&amp;")>=0:
+    v=v.replace("&amp;","&")
+  return v
+
 def parse_list(list_str):
-   return list_str.split(',')
+   out=[]
+   for v in list_str.split(','):
+     out.append(encode_el(v))
+   return out
 
 def parse_dict(dict_str):
    els = dict_str.split(",")
    out = {}
    for el in els:
      k,v = el.split(":")
-     out[k] = v
+     out[k] = encode_el(v)
    return out
 
 def update_parse(var, field, ftype,
