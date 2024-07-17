@@ -1,22 +1,20 @@
 FROM nvidia/cuda:12.1.0-base-rockylinux8
 
-# OSG RPMs
-RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el8-release-latest.rpm && \
-    yum -y install epel-release
-
-RUN yum -y install less which procps-ng bind-utils \
-                   osg-wn-client &&\
-    yum -y install apptainer && \
-    yum -y install condor condor-stash-plugin && \
-    yum clean all
-
 # Enable OpenCL
 # As suggested by https://github.com/WIPACrepo/pyglidein/blob/master/Dockerfile
 RUN mkdir -p /etc/OpenCL/vendors && \
     echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
 
-# Some helper OpenCL tools
-RUN yum install -y clinfo && \
+# OSG RPMs
+RUN yum -y install https://repo.opensciencegrid.org/osg/23-main/osg-23-main-el8-release-latest.rpm && \
+    yum -y install epel-release && \
+    dnf config-manager --set-enabled powertools
+
+RUN yum -y install less which procps-ng bind-utils \
+                   osg-wn-client &&\
+    yum -y install apptainer && \
+    yum -y install condor condor-stash-plugin && \
+    yum install -y clinfo && \
     yum clean all
 
 # Install often used libraries
@@ -25,11 +23,11 @@ RUN yum install -y clinfo && \
 # attr needed by CVMFS checks
 RUN yum -y groupinstall "Development Tools" \
                         "Scientific Support" && \
-    yum install -y freetype && \
-    yum -y install attr && yum clean all
+    yum install -y freetype attr && \
+    yum clean all
 
 # Set python to be python3
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+RUN alternatives --set python /usr/bin/python3
 
 # Condor does not pick up the system libraries
 ADD profile.d/cudalib.sh /etc/profile.d/
