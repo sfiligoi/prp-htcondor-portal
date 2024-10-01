@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prp-htcondor-wn-ro
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prp-htcondor-wn-ro-pods
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prp-htcondor-wn-ro-pods
+subjects:
+- kind: ServiceAccount
+  name: prp-htcondor-wn-ro
+roleRef:
+  kind: Role
+  name: prp-htcondor-wn-ro-pods # this must match the name of the Role you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+# The following node get functionality is essential
+# But needs admin privileges
+#---
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: ClusterRole
+#metadata:
+#  name: prp-htcondor-wn-ro-nodes
+#rules:
+#- apiGroups: [""]
+#  resources: ["nodes"]
+#  verbs: ["get", "list"]
+#---
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: ClusterRoleBinding
+#metadata:
+#  name: prp-htcondor-wn-ro-nodes
+#subjects:
+#- kind: ServiceAccount
+#  name: prp-htcondor-wn-ro
+#roleRef:
+#  apiGroup: rbac.authorization.k8s.io
+#  kind: ClusterRole
+#  name: prp-htcondor-wn-ro-nodes
+
