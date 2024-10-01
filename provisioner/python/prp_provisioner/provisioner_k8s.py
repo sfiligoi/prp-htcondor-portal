@@ -16,6 +16,7 @@ from . import provisioner_config_parser
 ProvisionerK8SConfigFields = ('namespace','condor_host',
                               'k8s_image','k8s_image_pull_policy',
                               'priority_class','priority_class_cpu','priority_class_gpu',
+                              'service_account_name',
                               'tolerations_list', 'node_selectors_dict', 'node_affinity_dict',
                               'labels_dict', 'annotations_dict', 'envs_dict',
                               'pvc_volumes_dict', 'config_volumes_dict',
@@ -95,6 +96,7 @@ class ProvisionerK8SConfig:
       self.priority_class = copy.deepcopy(priority_class)
       self.priority_class_cpu = copy.deepcopy(priority_class_cpu)
       self.priority_class_gpu = copy.deepcopy(priority_class_gpu)
+      self.service_account_name = None
       self.base_tolerations = copy.deepcopy(base_tolerations)
       self.base_pvc_volumes = copy.deepcopy(base_pvc_volumes)
       self.base_config_volumes = {}
@@ -127,6 +129,7 @@ class ProvisionerK8SConfig:
       self.priority_class = provisioner_config_parser.update_parse(self.priority_class, 'priority_class', 'str', fields, dict)
       self.priority_class_cpu = provisioner_config_parser.update_parse(self.priority_class_cpu, 'priority_class_cpu', 'str', fields, dict)
       self.priority_class_gpu = provisioner_config_parser.update_parse(self.priority_class_gpu, 'priority_class_gpu', 'str', fields, dict)
+      self.service_account_name = provisioner_config_parser.update_parse(self.service_account_name, 'service_account_name', 'str', fields, dict)
       self.base_tolerations = provisioner_config_parser.update_parse(self.base_tolerations, 'tolerations_list', 'list', fields, dict)
       self.base_pvc_volumes = provisioner_config_parser.update_parse(self.base_pvc_volumes, 'pvc_volumes_dict', 'dict', fields, dict)
       self.base_config_volumes = provisioner_config_parser.update_parse(self.base_config_volumes, 'config_volumes_dict', 'dict', fields, dict)
@@ -160,6 +163,7 @@ class ProvisionerK8S:
       self.priority_class = copy.deepcopy(config.priority_class)
       self.priority_class_cpu = copy.deepcopy(config.priority_class_cpu)
       self.priority_class_gpu = copy.deepcopy(config.priority_class_gpu)
+      self.service_account_name = copy.deepcopy(config.service_account_name)
       self.base_tolerations = copy.deepcopy(config.base_tolerations)
       self.base_pvc_volumes = copy.deepcopy(config.base_pvc_volumes)
       self.base_config_volumes = copy.deepcopy(config.base_config_volumes)
@@ -393,6 +397,9 @@ class ProvisionerK8S:
 
       if priority_class!=None:
          body['spec']['template']['spec']['priorityClassName'] = priority_class
+
+      if self.service_account_name!=None:
+         body['spec']['template']['spec']['serviceAccountName'] = self.service_account_name
 
       if len(self.additional_annotations.keys())!=0:
          # annotations are rare, so treat them explicitly here
