@@ -3,6 +3,10 @@ FROM opensciencegrid/osgvo-docker-pilot:23-el9-release
 # Fix python vs python3
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
+# Add kubectl, to be able to interact with the k8s cluster
+RUN curl -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/sbin/kubectl && \
+    chmod u+x /usr/sbin/kubectl
+
 # Tweaked singularity for container environments
 # Remove default singularity from path, too
 COPY scripts/singularity_npid.sh /usr/bin/singularity_npid.sh
