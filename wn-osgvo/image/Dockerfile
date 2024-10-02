@@ -31,6 +31,7 @@ RUN chmod a+rx /bin/check_master.sh
 # system level scripts
 COPY scripts/01_token.sh /etc/entrypoint/image-config.d/01_token.sh
 COPY scripts/01_no_condor_host.sh /etc/entrypoint/image-config.d/01_no_condor_host.sh
+COPY scripts/11_set_OSGInstitutionID.sh /etc/entrypoint/image-config.d/11_set_OSGInstitutionID.sh
 
 # pilot level scripts
 COPY scripts/02_validate_singularity.sh /etc/osg/image-init.d/02_validate_singularity.sh 
