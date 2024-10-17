@@ -1,5 +1,14 @@
 FROM opensciencegrid/osgvo-docker-pilot:23-el9-release
 
+# Enable OpenCL
+# As suggested by https://github.com/WIPACrepo/pyglidein/blob/master/Dockerfile
+RUN mkdir -p /etc/OpenCL/vendors && \
+    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+
+# Some helper OpenCL tools
+RUN yum install -y clinfo && \
+    yum clean all
+
 # Fix python vs python3
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
