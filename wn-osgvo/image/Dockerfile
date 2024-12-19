@@ -1,4 +1,4 @@
-FROM opensciencegrid/osgvo-docker-pilot:23-el9-release
+FROM hub.opensciencegrid.org/osg-htc/ospool-ep:24-release
 
 # Enable OpenCL
 # As suggested by https://github.com/WIPACrepo/pyglidein/blob/master/Dockerfile
