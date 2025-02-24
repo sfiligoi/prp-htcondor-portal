@@ -109,7 +109,7 @@ class ProvisionerSchedd:
    # INTERNAL
    def _append_jobs(self, schedd_name, jobs, myjobs):
       """jobs is a list and will be updated in-place"""
-      minvals={'RequestMemory':4096,'RequestDisk':8000000}
+      minvals={'RequestMemory':(4096,1024),'RequestDisk':(8000000,1000000)}
       for job in myjobs:
          jobattrs={'ScheddName':schedd_name}
          for k in job.keys():
@@ -118,7 +118,10 @@ class ProvisionerSchedd:
                # and the initial value (after eval) is way too low
                # Treat very low values as undefines
                val = int(job.eval(k))
-               if val>=minvals[k]:
+               mval = minvals[k][0]
+               if val>=mval:
+                  rval = minvals[k][1]
+                  val = ((val + rval-1)//rval)*rval # round up
                   jobattrs[k]="%s"%val
                #else pretend it is not there
             else:
