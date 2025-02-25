@@ -31,7 +31,7 @@ PROVISIONING_START = \$(PROVISIONING_START) && \\
                      ifthenelse(TARGET.RequestDisk=!=undefined, \\
                            ifthenelse(TARGET.RequestDisk<8000000, \\
                                  Disk=?=8000000, \\
-                                 ((Disk>=TARGET.RequestDisk) && ((TARGET.RequestDisk+1500000)>Disk))), \\
+                                 ((Disk>=TARGET.RequestDisk) && ((TARGET.RequestDisk+4500000)>Disk))), \\
                            Disk=?=8000000)
 
 # GPUs will not be defined if there are no GPUs
