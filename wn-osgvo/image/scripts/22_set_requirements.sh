@@ -23,7 +23,7 @@ PROVISIONING_START = \$(PROVISIONING_START) && \\
                      ifthenelse(TARGET.RequestMemory=!=undefined, \\
                            ifthenelse(TARGET.RequestMemory<4096, \\
                                  Memory=?=4096, \\
-                                 ((Memory>=TARGET.RequestMemory) && ((TARGET.RequestMemory+1536)>Memory)), \\
+                                 ((Memory>=TARGET.RequestMemory) && ((TARGET.RequestMemory+1536)>Memory))), \\
                            Memory=?=4096)
 
 # Note: 8000000 is special in the provisioner
