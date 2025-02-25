@@ -18,10 +18,21 @@ MATCHING_START = ( (FORCE_K8SNAMESPACE_MATCHING=?="no") || regexp(TARGET.Request
 PROVISIONING_START = ifthenelse(TARGET.RequestCPUs=!=undefined, CPUs=?=TARGET.RequestCPUs, CPUs=?=1)
 
 # Pretend small memory and disk requests are the equivalent of not set
+# Note: 4096 is special in the provisioner
 PROVISIONING_START = \$(PROVISIONING_START) && \\
-                     ifthenelse(TARGET.RequestMemory=!=undefined, ifthenelse(TARGET.RequestMemory<4096,Memory=?=4096, Memory=?=TARGET.RequestMemory), Memory=?=4096)
+                     ifthenelse(TARGET.RequestMemory=!=undefined, \\
+                           ifthenelse(TARGET.RequestMemory<4096, \\
+                                 Memory=?=4096, \\
+                                 ((Memory>=TARGET.RequestMemory) && ((TARGET.RequestMemory+1536)>Memory)), \\
+                           Memory=?=4096)
+
+# Note: 8000000 is special in the provisioner
 PROVISIONING_START = \$(PROVISIONING_START) && \\
-                     ifthenelse(TARGET.RequestDisk=!=undefined, ifthenelse(TARGET.RequestDisk<8000000,Disk=?=8000000, Disk=?=TARGET.RequestDisk), Disk=?=8000000)
+                     ifthenelse(TARGET.RequestDisk=!=undefined, \\
+                           ifthenelse(TARGET.RequestDisk<8000000, \\
+                                 Disk=?=8000000, \\
+                                 ((Disk>=TARGET.RequestDisk) && ((TARGET.RequestDisk+1500000)>Disk))), \\
+                           Disk=?=8000000)
 
 # GPUs will not be defined if there are no GPUs
 PROVISIONING_START = \$(PROVISIONING_START) && \\
