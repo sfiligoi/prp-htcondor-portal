@@ -109,7 +109,7 @@ class ProvisionerSchedd:
    # INTERNAL
    def _append_jobs(self, schedd_name, jobs, myjobs):
       """jobs is a list and will be updated in-place"""
-      minvals={'RequestMemory':(4096,1024),'RequestDisk':(8000000,1000000)}
+      minvals={'RequestMemory':(4096,1024),'RequestDisk':(8000000,4000000)}
       for job in myjobs:
          jobattrs={'ScheddName':schedd_name}
          for k in job.keys():
