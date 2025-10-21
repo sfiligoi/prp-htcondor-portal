@@ -363,6 +363,7 @@ class ProvisionerK8S:
          'spec': {
             'parallelism': n_pods,
             'completions': n_pods,
+            'backoffLimit': 0,
             'ttlSecondsAfterFinished': self.k8s_job_ttl,
             'template': {
                'metadata': {
@@ -539,4 +540,3 @@ class ProvisionerK8S:
    def _augment_node_selectors(self, node_selectors, attrs):
       """Add any additional elements to the dictionary (attrs is read-only)"""
       return
-
