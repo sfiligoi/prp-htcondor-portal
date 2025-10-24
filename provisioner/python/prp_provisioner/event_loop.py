@@ -76,16 +76,17 @@ class ProvisionerEventLoop:
       n_pods_waiting=n_pods_statearr[0]
       n_pods_unmatched=n_pods_statearr[1]
       n_pods_claimed=n_pods_statearr[2]
+      n_pods_failed=n_pods_statearr[3]
       n_pods_unclaimed = n_pods_waiting+n_pods_unmatched
-      n_pods_total = n_pods_unclaimed+n_pods_claimed
+      n_pods_total = n_pods_unclaimed+n_pods_claimed+n_pods_failed
 
       if n_pods_total>=self.max_submit_pods_per_cluster:
          min_pods = 0
 
-      if (n_jobs_idle+n_pods_unclaimed+min_pods+n_pods_waiting+n_pods_unmatched+n_pods_claimed)>0:
+      if (n_jobs_idle+n_pods_unclaimed+min_pods+n_pods_waiting+n_pods_unmatched+n_pods_claimed+n_pods_failed)>0:
         # do not report all zeros (e.g. only completed pods in the system)
-        self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i max %i)"%
-                               (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, self.max_submit_pods_per_cluster))
+        self.log_obj.log_debug("[ProvisionerEventLoop] Cluster '%s' n_jobs_idle %i n_pods_unclaimed %i min_pods %i (pods wait %i unmatched %i claimed %i failed %i max %i)"%
+                               (cluster_id, n_jobs_idle, n_pods_unclaimed, min_pods, n_pods_waiting, n_pods_unmatched, n_pods_claimed, n_pods_failed, self.max_submit_pods_per_cluster))
 
       return (min_pods,n_pods_unclaimed)
 
@@ -123,4 +124,3 @@ class ProvisionerEventLoop:
                                    (cluster_id,min_pods-n_pods_unclaimed))
 
       return
-
